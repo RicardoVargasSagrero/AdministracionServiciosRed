@@ -7,7 +7,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-unsigned char mensaje[] = "Hola red";
+unsigned char mensaje[] = "Ricardo Vargas Sagrero\n";
 
 int main(){
     //Declaramos las estructuras de los sockets
@@ -40,18 +40,29 @@ int main(){
         	perror("\nExito en bind");
         	memset(&remota,0x00,sizeof(remota));
         	remota.sin_family = AF_INET;
-        	remota.sin_port = htons(53); //Puerto remoto
+        	remota.sin_port = htons(8000); //Puerto remoto
         	//Direccion IP, aqui se debe declarar
-    	    remota.sin_addr.s_addr=inet_addr("8.8.8.8"); 
+    	    remota.sin_addr.s_addr=inet_addr("10.100.78.142"); 
     	    //Regresa la cantidad de byte que envio, si regresa -1 
     	    //quiere decir que hubo un erro
-    	    tam = sendto(udp_socket,mensaje,10,0,(struct sockaddr *)&remota,sizeof(remota));
+    	    tam = sendto(udp_socket,mensaje,25,0,(struct sockaddr *)&remota,sizeof(remota));
     		if(tam == -1){
     			perror("\nError al enviar mensaje");
     			exit(1);
     		}
     		else
     			perror("\nExito al enviar");
+            //********Recibe mensaje 
+            tam = recvfrom(udp_socket,mensaje,512,0,(struct sockaddr *)&cliente,&ptam); //Lo ultimo es porque se pide un apuntador
+            if(tam == -1){
+                perror("\nError al enviar recibir");
+                exit(1);
+            }
+            else{
+                printf("\nExito al recibir: %s\n",mensaje);
+                printf("ip: %s\n", inet_ntoa(cliente.sin_addr));
+                printf("Puerto: %d\n",cliente.sin_port);
+            }
     	}
     }
     close(udp_socket);
