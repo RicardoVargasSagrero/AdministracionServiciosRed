@@ -42,7 +42,7 @@ int main(){
         	remota.sin_family = AF_INET;
         	remota.sin_port = htons(8000); //Puerto remoto
         	//Direccion IP, aqui se debe declarar
-    	    remota.sin_addr.s_addr=inet_addr("10.100.78.142"); 
+    	    remota.sin_addr.s_addr=inet_addr("10.100.78.205"); 
     	    //Regresa la cantidad de byte que envio, si regresa -1 
     	    //quiere decir que hubo un erro
     	    tam = sendto(udp_socket,mensaje,25,0,(struct sockaddr *)&remota,sizeof(remota));
