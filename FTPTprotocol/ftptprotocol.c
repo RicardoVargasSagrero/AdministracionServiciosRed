@@ -2,6 +2,7 @@
 Con fopen copiar un archivo, de la entrada a la salida
 ese archivo  guardarlo en un arreglo de [512] y 
 despues enviarla por un socket
+Se agrerga funcion para copiar un archivo
 */
 
 #include <stdio.h>
