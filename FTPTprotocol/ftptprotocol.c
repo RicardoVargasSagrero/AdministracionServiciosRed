@@ -9,25 +9,28 @@ https://tools.ietf.org/html/rfc1350
 */
 
 #include <stdio.h>
- #include <sys/socket.h>
- #include <netinet/in.h>
- #include <netinet/ip.h> /* superset of previous */
- #include <stdlib.h>
- #include <unistd.h>
- #include <stdio.h>
- #include <arpa/inet.h>
- #include <sys/time.h>
+#include <stdlib.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <netinet/ip.h> /* superset of previous */
+#include <stdlib.h>
+#include <unistd.h>
+#include <stdio.h>
+#include <arpa/inet.h>
+#include <sys/time.h>
+#include <string.h>
 
 FILE *fileCopy(FILE *f,char *filename);
 /*Operacion con los oparation codes, simple construccion, del 1 al 5*/
-void ReadRequest();
-void WriteRequest();
-void Data();
-void Acknowledment();
-void Error();
+void ReadRequest(unsigned char *,int);
+void WriteRequest(unsigned char *,int);
+void Data(unsigned char *,int);
+void Acknowledment(unsigned char *,int);
+void Error(unsigned char *,int);
 int main(int argc, char const *argv[])
 {
-
+	int opcode;
+	unsigned char buffer[600];
 	FILE *file,*file2;
 	char filename[100],c;
 	printf("Enter the file name to copy: \n");
@@ -79,6 +82,29 @@ int main(int argc, char const *argv[])
 	       else
 	        {
 	         printf("\nExito al recibir: %s",mensaje);
+	         /*Se hace lectura de los codigos de operacion dados en los primeros 2 bytes del mensaje*/
+	         opcode = mensaje[1];
+	         switch(opcode){
+	         	case 1:
+	         		ReadRequest(mensaje,opcode);
+	         		break;
+	         	case 2:
+	         		WriteRequest(mensaje,opcode);
+	         		break;
+	         	case 3:
+	         		Data(mensaje,opcode);
+	         		break;
+	         	case 4:
+	         		Acknowledment(mensaje,opcode);
+	         		break;
+	         	case 5:
+	         		Error(mensaje,opcode);
+	         		break;
+	         	default:
+	         		/*Se debe esperar nueva respuesta*/
+	         		printf("Error en codigo de operacion, esperando nueva respuesta\n");
+	         		break;
+	         }
 	         bandera=1;
 	         /*EN ESTA PARTE SE REALIZAN LA VALIDACION DE LOS CODIGOS
 	         DE OPERACION PARA ENTRAR A LAS FUNCIONES*/
@@ -112,4 +138,45 @@ FILE *fileCopy(FILE *f,char *filename){
 	}
 
 	return fc;
+}
+void WriteRequest(unsigned char *mensaje,int opcode){
+	/*From the side of the server we recived a Write Request
+	so the client is tring to Send a file or write in one.
+
+	2 bytes     string    1 byte     string   1 byte
+     ------------------------------------------------
+    | Opcode |  Filename  |   0  |   Mode    |   0  |
+     ------------------------------------------------*/
+	char filename[100];
+
+
+
+
+}
+void ReadRequest(unsigned char *mensaje,int opcode){
+	/*2 bytes     string    1 byte     string   1 byte
+     ------------------------------------------------
+    | Opcode |  Filename  |   0  |    Mode    |   0  |
+     ------------------------------------------------ */
+
+}
+void Data(unsigned char *mensaje,int opcode){
+	/*2 bytes     2 bytes      n bytes
+     ----------------------------------
+    | Opcode |   Block #  |   Data     |
+     ----------------------------------*/
+}
+
+void Acknowledment(unsigned char *mensaje,int opcode){
+	/* 2 bytes     2 bytes
+      ---------------------
+     | Opcode |   Block #  |
+      ---------------------*/
+}
+void Error(unsigned char *mensaje,int opcode){
+	/*2 bytes     2 bytes      string    1 byte
+    -----------------------------------------
+   | Opcode |  ErrorCode |   ErrMsg   |   0  |
+    -----------------------------------------
+*/
 }
