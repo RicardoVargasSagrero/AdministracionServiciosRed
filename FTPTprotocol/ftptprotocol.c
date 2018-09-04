@@ -33,6 +33,7 @@ int main(int argc, char const *argv[])
 	unsigned char buffer[600];
 	FILE *file,*file2;
 	char filename[100],c;
+	/*
 	printf("Enter the file name to copy: \n");
 	scanf("%s",filename);
 	file = fopen(filename,"r");	
@@ -42,11 +43,12 @@ int main(int argc, char const *argv[])
 		printf("Error al abrir el archivo");	
 	fclose(file);
 	fclose(file2);
+	*/
 	/*Funcion para crear un servidor */
 
  	struct sockaddr_in local, remota;    
 	int udp_socket,lbind,tam,lrecv,bandera;
-	unsigned char mensaje[1514];
+	unsigned char message[1514];
 	struct timeval start, end;
 	long mtime=0, seconds, useconds; 
 
@@ -72,33 +74,33 @@ int main(int argc, char const *argv[])
 	       lrecv=sizeof(remota);
 	       gettimeofday(&start, NULL);
 	       bandera=0;
-	       while(mtime<5000)
+	       while(mtime<6000)
 	       {
-	       tam=recvfrom(udp_socket,mensaje,512,MSG_DONTWAIT,(struct sockaddr*)&remota,&lrecv);
+	       tam=recvfrom(udp_socket,message,512,MSG_DONTWAIT,(struct sockaddr*)&remota,&lrecv);
 	       if(tam==-1)
 	        {
 	         perror("\nError al recibir");
 	        }
 	       else
 	        {
-	         printf("\nExito al recibir: %s",mensaje);
-	         /*Se hace lectura de los codigos de operacion dados en los primeros 2 bytes del mensaje*/
-	         opcode = mensaje[1];
+	         printf("\nExito al recibir: %s",message);
+	         /*Se hace lectura de los codigos de operacion dados en los primeros 2 bytes del message*/
+	         opcode = message[1];
 	         switch(opcode){
 	         	case 1:
-	         		ReadRequest(mensaje,opcode);
+	         		ReadRequest(message,opcode);
 	         		break;
 	         	case 2:
-	         		WriteRequest(mensaje,opcode);
+	         		WriteRequest(message,opcode);
 	         		break;
 	         	case 3:
-	         		Data(mensaje,opcode);
+	         		Data(message,opcode);
 	         		break;
 	         	case 4:
-	         		Acknowledment(mensaje,opcode);
+	         		Acknowledment(message,opcode);
 	         		break;
 	         	case 5:
-	         		Error(mensaje,opcode);
+	         		Error(message,opcode);
 	         		break;
 	         	default:
 	         		/*Se debe esperar nueva respuesta*/
@@ -139,7 +141,7 @@ FILE *fileCopy(FILE *f,char *filename){
 
 	return fc;
 }
-void WriteRequest(unsigned char *mensaje,int opcode){
+void WriteRequest(unsigned char *message,int opcode){
 	/*From the side of the server we recived a Write Request
 	so the client is tring to Send a file or write in one.
 
@@ -147,33 +149,38 @@ void WriteRequest(unsigned char *mensaje,int opcode){
      ------------------------------------------------
     | Opcode |  Filename  |   0  |   Mode    |   0  |
      ------------------------------------------------*/
-	char filename[100];
+	char filename[100], mode[8];
+	/*copy of the file name to open,
+	*********************************
+	we missed the string Mode size, thus we can obtain the Mode*/
+	memcpy(filename,message+2,strlen(message)-2);
+	memcpy(mode,message+2+strlen(filename)+1,strlen(message)-1);
 
 
 
 
 }
-void ReadRequest(unsigned char *mensaje,int opcode){
+void ReadRequest(unsigned char *message,int opcode){
 	/*2 bytes     string    1 byte     string   1 byte
      ------------------------------------------------
     | Opcode |  Filename  |   0  |    Mode    |   0  |
      ------------------------------------------------ */
 
 }
-void Data(unsigned char *mensaje,int opcode){
+void Data(unsigned char *message,int opcode){
 	/*2 bytes     2 bytes      n bytes
      ----------------------------------
     | Opcode |   Block #  |   Data     |
      ----------------------------------*/
 }
 
-void Acknowledment(unsigned char *mensaje,int opcode){
+void Acknowledment(unsigned char *message,int opcode){
 	/* 2 bytes     2 bytes
       ---------------------
      | Opcode |   Block #  |
       ---------------------*/
 }
-void Error(unsigned char *mensaje,int opcode){
+void Error(unsigned char *message,int opcode){
 	/*2 bytes     2 bytes      string    1 byte
     -----------------------------------------
    | Opcode |  ErrorCode |   ErrMsg   |   0  |
