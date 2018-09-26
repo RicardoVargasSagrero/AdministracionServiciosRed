@@ -6,6 +6,10 @@ Se agrerga funcion para copiar un archivo
 
 Para mayor informacion del protocolo consultar
 https://tools.ietf.org/html/rfc1350
+The following limitations apply in RFC 783; the maximum size of a data block is 
+512 bytes, block number is represented by a two byte unsigned integer. 
+This means the maximum number of blocks that can be transferred is 65,535 and the maximum file size that can be transferred is 65,535 x 512 bytes, 
+or about 32 megabytes.
 */
 
 #include <stdio.h>
@@ -22,17 +26,17 @@ https://tools.ietf.org/html/rfc1350
 
 FILE *fileCopy(FILE *f,char *filename);
 /*Operacion con los oparation codes, simple construccion, del 1 al 5*/
-void ReadRequest(unsigned char *,int);
-void WriteRequest(unsigned char *,int);
-void Data(unsigned char *,int);
+void ReadRequest(unsigned char[],int);
+void WriteRequest(unsigned char [],int );
+void Data(unsigned char [],int);
 void Acknowledment(unsigned char *,int);
-void Error(unsigned char *,int);
+void Error(unsigned char [],int);
 int main(int argc, char const *argv[])
 {
-	int opcode;
+	int opcode,i;
 	unsigned char buffer[600];
 	FILE *file,*file2;
-	char filename[100],c;
+	char filename[100],c,mode[10];
 	/*
 	printf("Enter the file name to copy: \n");
 	scanf("%s",filename);
@@ -48,7 +52,7 @@ int main(int argc, char const *argv[])
 
  	struct sockaddr_in local, remota;    
 	int udp_socket,lbind,tam,lrecv,bandera;
-	unsigned char message[1514];
+	unsigned char message[512];
 	struct timeval start, end;
 	long mtime=0, seconds, useconds; 
 
@@ -74,23 +78,33 @@ int main(int argc, char const *argv[])
 	       lrecv=sizeof(remota);
 	       gettimeofday(&start, NULL);
 	       bandera=0;
-	       while(mtime<6000)
+	       while(mtime<20000)
 	       {
 	       tam=recvfrom(udp_socket,message,512,MSG_DONTWAIT,(struct sockaddr*)&remota,&lrecv);
 	       if(tam==-1)
 	        {
-	         perror("\nError al recibir");
+	         //perror("\nError al recibir");
 	        }
 	       else
 	        {
 	         printf("\nExito al recibir: %s",message);
 	         /*Se hace lectura de los codigos de operacion dados en los primeros 2 bytes del message*/
-	         opcode = message[1];
+	         opcode = message[1] + 0x0000;
+	         printf("%d\n",opcode);
 	         switch(opcode){
 	         	case 1:
 	         		ReadRequest(message,opcode);
 	         		break;
 	         	case 2:
+	         		/*2 bytes     string    1 byte     string   1 byte
+    				 ------------------------------------------------
+    				| Opcode |  Filename  |   0  |   Mode    |   0  |
+    				 ------------------------------------------------*/
+		         		printf("*******************\n");
+		         		for(i = 0; i < sizeof(message); i++){
+		         			printf("%c",message[i]);
+		         		}
+	         		printf("\n");
 	         		WriteRequest(message,opcode);
 	         		break;
 	         	case 3:
@@ -106,8 +120,8 @@ int main(int argc, char const *argv[])
 	         		/*Se debe esperar nueva respuesta*/
 	         		printf("Error en codigo de operacion, esperando nueva respuesta\n");
 	         		break;
-	         }
-	         bandera=1;
+	        }
+	        bandera=1;
 	         /*EN ESTA PARTE SE REALIZAN LA VALIDACION DE LOS CODIGOS
 	         DE OPERACION PARA ENTRAR A LAS FUNCIONES*/
 	        }
@@ -115,7 +129,7 @@ int main(int argc, char const *argv[])
 	        seconds  = end.tv_sec  - start.tv_sec;
 	        useconds = end.tv_usec - start.tv_usec;
 	        mtime = ((seconds) * 1000 + useconds/1000.0) + 0.5;
-	        printf("Elapsed time: %ld milliseconds\n", mtime);
+	        //printf("Elapsed time: %ld milliseconds\n", mtime);
 	        if(bandera==1)
 	            break;
 	        }
@@ -141,7 +155,7 @@ FILE *fileCopy(FILE *f,char *filename){
 
 	return fc;
 }
-void WriteRequest(unsigned char *message,int opcode){
+void WriteRequest(unsigned char message[],int opcode){
 	/*From the side of the server we recived a Write Request
 	so the client is tring to Send a file or write in one.
 
@@ -149,41 +163,40 @@ void WriteRequest(unsigned char *message,int opcode){
      ------------------------------------------------
     | Opcode |  Filename  |   0  |   Mode    |   0  |
      ------------------------------------------------*/
-	char filename[100], mode[8];
-	/*copy of the file name to open,
-	*********************************
-	we missed the string Mode size, thus we can obtain the Mode*/
-	memcpy(filename,message+2,strlen(message)-2);
-	memcpy(mode,message+2+strlen(filename)+1,strlen(message)-1);
-
-
-
-
+	char filename[80],mode[15];
+	memcpy(filename,message+2,strlen(message)+1);
+	printf("WriteRequest Function\nFilename: %s\ntamano del msj: %ld\n",filename,strlen(message));
+ 	int i; 
+ 	printf("*******************\n");
+	         		for(i = 0; i < sizeof(message); i++){
+	         			printf("%c",message[i]);
+	         		}
 }
-void ReadRequest(unsigned char *message,int opcode){
+void ReadRequest(unsigned char message[],int opcode){
 	/*2 bytes     string    1 byte     string   1 byte
      ------------------------------------------------
     | Opcode |  Filename  |   0  |    Mode    |   0  |
      ------------------------------------------------ */
-
+	printf("ReadRequest Function in Acction\n");
 }
-void Data(unsigned char *message,int opcode){
+void Data(unsigned char message[],int opcode){
 	/*2 bytes     2 bytes      n bytes
      ----------------------------------
     | Opcode |   Block #  |   Data     |
      ----------------------------------*/
+	printf("Data packing sending\n");
 }
-
-void Acknowledment(unsigned char *message,int opcode){
+void Acknowledment(unsigned char message[],int opcode){
 	/* 2 bytes     2 bytes
       ---------------------
      | Opcode |   Block #  |
       ---------------------*/
+	printf("Acknowledment send or recived\n");
 }
-void Error(unsigned char *message,int opcode){
+void Error(unsigned char message[],int opcode){
 	/*2 bytes     2 bytes      string    1 byte
     -----------------------------------------
    | Opcode |  ErrorCode |   ErrMsg   |   0  |
-    -----------------------------------------
-*/
+    -----------------------------------------*/
+    printf("Error ocurr\n");
 }
