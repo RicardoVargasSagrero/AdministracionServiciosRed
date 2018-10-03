@@ -33,7 +33,7 @@ void Acknowledment(unsigned char *,int);
 void Error(unsigned char [],int);
 int main(int argc, char const *argv[])
 {
-	int opcode,i;
+	int opcode,i,contTrama = 0;
 	unsigned char buffer[600];
 	FILE *file,*file2;
 	char filename[100],c,mode[10];
@@ -74,11 +74,11 @@ int main(int argc, char const *argv[])
 	      }
 	    else
 	      {
-	       printf("\nExito en bind");
+	       perror("\nExito en bind");
 	       lrecv=sizeof(remota);
 	       gettimeofday(&start, NULL);
 	       bandera=0;
-	       while(mtime<20000)
+	       while(mtime<500000)
 	       {
 	       tam=recvfrom(udp_socket,message,512,MSG_DONTWAIT,(struct sockaddr*)&remota,&lrecv);
 	       if(tam==-1)
@@ -164,13 +164,9 @@ void WriteRequest(unsigned char message[],int opcode){
     | Opcode |  Filename  |   0  |   Mode    |   0  |
      ------------------------------------------------*/
 	char filename[80],mode[15];
-	memcpy(filename,message+2,strlen(message)+1);
+	strcpy(filename,message+2,strlen(message)+1);
 	printf("WriteRequest Function\nFilename: %s\ntamano del msj: %ld\n",filename,strlen(message));
  	int i; 
- 	printf("*******************\n");
-	         		for(i = 0; i < sizeof(message); i++){
-	         			printf("%c",message[i]);
-	         		}
 }
 void ReadRequest(unsigned char message[],int opcode){
 	/*2 bytes     string    1 byte     string   1 byte
