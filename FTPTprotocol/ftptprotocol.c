@@ -85,7 +85,7 @@ int main(int argc, char const *argv[])
 	         printf("%d\n",opcode);
 	         do{
 	         	sleep(1);
-	         	tam=recvfrom(udp_socket,message,512,MSG_DONTWAIT,(struct sockaddr*)&remota,&lrecv);
+	         	tam=recvfrom(udp_socket,message,516,MSG_DONTWAIT,(struct sockaddr*)&remota,&lrecv);
 	         	printf("tam %d\n", tam);
 	         	opcode = message[1] + 0x0000;
 	        	printf("%d\n",opcode);
@@ -172,7 +172,7 @@ int WriteRequest(unsigned char message[],int opcode,int udp_socket,struct sockad
 	strcpy(filename,message+2);
 	printf("WriteRequest Function\nFilename: %s\ntamano del msj: %ld\n",filename,strlen(message));
  	//Once we recive the opcode to recive a file we open the  file and wait for the data
- 	filein = fopen(filename,"a");
+ 	filein = fopen(filename,"wb+");
  	//We add a condition, if the file name is null, we cannot create the file and send and send an error
  	tam = Acknowledment(opcode,udp_socket,remota);
  	return tam; 
@@ -196,13 +196,14 @@ int Data(unsigned char message[],int opcode,int udp_socket,struct sockaddr_in re
 	/*To know if we're gonna write or read a file we use the opcode
 	knowing that 1 =  Read Request and 2 = Write Request 
 	We'll use a flag WRFlag*/
-	
-	//buffer[0] = 0x00;
-	//buffer[1] = 0x03;
-	memset(buffer,0,sizeof(buffer));
 	//strcpy(buffer,message+4);
 	//printf("%s\n",buffer);
-	printf("DATA tam: %d\n",tam );
+	//printf("DATA tam: %d\n",tam );
+	if(tam != 512){
+		tam = tam - 4;
+		printf("DATA tam: %d\n",tam );
+	}
+	printf("%s\n",message+4);
 	if(WRFlag){
 		fwrite(message+4,1,tam,filein);
 	}
