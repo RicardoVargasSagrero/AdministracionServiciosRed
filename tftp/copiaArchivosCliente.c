@@ -43,7 +43,7 @@ int main(){
             memset(&remota,0x00, sizeof(remota));
             remota.sin_family=AF_INET;
             //setters de puerto e ip
-            remota.sin_port=htons(8000);
+            remota.sin_port=htons(69);
             remota.sin_addr.s_addr=inet_addr("10.100.68.242");
 
             //se abre el archivo a leer

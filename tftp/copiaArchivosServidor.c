@@ -7,11 +7,11 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
-#include <memory.h>
-#include <arpa/inet.h>
-#include <glob.h>
-#include <fcntl.h>
-#include <sys/mman.h>
+#include <memory.h> //
+#include <arpa/inet.h> 
+#include <glob.h> //
+#include <fcntl.h> //
+#include <sys/mman.h> //
 
 unsigned char buff[512];
 
@@ -21,7 +21,6 @@ int main(){
     int udp_socket, lbind, tam, ptam;
     udp_socket = socket(AF_INET, SOCK_DGRAM, 0);
     FILE *fout;
-
     if( udp_socket == -1 ){
         perror("Error al abrir el socket");
         exit(1);
@@ -30,7 +29,7 @@ int main(){
         perror("Exito al abrir el socket");
         memset(&servidor,0x00, sizeof(servidor));
         servidor.sin_family=AF_INET;
-        servidor.sin_port=htons(8000);
+        servidor.sin_port=htons(69);
         servidor.sin_addr.s_addr=INADDR_ANY;
         lbind = bind(udp_socket, (struct sockaddr *)&servidor, sizeof(servidor));
         if(lbind == -1){
@@ -52,7 +51,7 @@ int main(){
                 //recibimos el bloque
                 tam = recvfrom(udp_socket, buff, 512, 0, (struct sockaddr *) &cliente, &ptam);
                 //si el bloque es positivo, significa que esta recibiendo algo
-		contTrama++;
+		        contTrama++;
                 if (tam == -1) {
                     perror("\nError al recibir");
                     exit(1);
