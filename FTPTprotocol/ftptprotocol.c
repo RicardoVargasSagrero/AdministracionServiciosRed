@@ -26,11 +26,11 @@ or about 32 megabytes.
 
 FILE *fileCopy(FILE *f,char *filename);
 /*Operacion con los oparation codes, simple construccion, del 1 al 5*/
-int ReadRequest(unsigned char[],int);
+int ReadRequest(unsigned char[],int,int,int,struct sockaddr_in,int);
 int WriteRequest(unsigned char [],int, int, struct sockaddr_in,int);
 int Data(unsigned char [],int,int,struct sockaddr_in,int,int);
-int Acknowledment(int, int, struct sockaddr_in);
-int Error(unsigned char [],int);
+int Acknowledment(unsigned char [],int, int, struct sockaddr_in,int,int);
+int Error(unsigned char [],int,int,int, struct sockaddr_in);
 FILE *filein,*fileout;
 int counterInteger = 0;
 unsigned char buffer[516];
@@ -93,8 +93,9 @@ int main(int argc, char const *argv[])
 	         	switch(opcode){
 	         		case 1:
 	         			WRFlag = 0;
-	         			tam = ReadRequest(message,opcode);
-	         			printf("TAM after ReadRequest = %d",tam);
+	         			ReadRequest(message,opcode,tam,udp_socket,remota,lrecv);
+	         			printf("TAM after ReadRequest = %d\n",tam);
+	         			tam = 512;
 	         			break;
 	         		case 2:
 	         			/*2 bytes     string    1 byte     string   1 byte
@@ -102,7 +103,8 @@ int main(int argc, char const *argv[])
     					| Opcode |  Filename  |   0  |   Mode    |   0  |
     				 	------------------------------------------------*/
 	         			WRFlag = 1;
-	         			tam = WriteRequest(message,opcode,udp_socket,remota,lrecv);
+	         			WriteRequest(message,opcode,udp_socket,remota,lrecv);
+	         			tam = 512;
 	         			printf("TAM after WriteRequest = %d\n\n",tam);
 	         			break;
 	         		case 3:
@@ -110,11 +112,11 @@ int main(int argc, char const *argv[])
 	         			printf("TAM after Data = %d\n",tam);
 	         			break;
 	         		case 4:
-	         			tam = Acknowledment(opcode,udp_socket,remota);
+	         			tam = Acknowledment(message,opcode,udp_socket,remota,lrecv,tam);
 	         			printf("TAM after Acknowledment = %d\n",tam);
 	         			break;
 	         		case 5:
-	         			tam = Error(message,opcode);
+	         			tam = Error(message,opcode,0,udp_socket,remota);
 	         			printf("TAM after Error = %d\n",tam);
 	         			break;
 	         		default:
@@ -124,7 +126,10 @@ int main(int argc, char const *argv[])
 	         			break;
 	        	}
 	        }while(tam >= 512);
-	        fclose(filein);
+
+	        //fclose(filein);
+	        //fclose(fileout);
+	        printf("Before segmentation fault\n");
 	        bandera=1;
 	         /*EN ESTA PARTE SE REALIZAN LA VALIDACION DE LOS CODIGOS
 	         DE OPERACION PARA ENTRAR A LAS FUNCIONES*/
@@ -174,18 +179,27 @@ int WriteRequest(unsigned char message[],int opcode,int udp_socket,struct sockad
  	//Once we recive the opcode to recive a file we open the  file and wait for the data
  	filein = fopen(filename,"wb+");
  	//We add a condition, if the file name is null, we cannot create the file and send and send an error
- 	tam = Acknowledment(opcode,udp_socket,remota);
+ 	tam = Acknowledment(message,opcode,udp_socket,remota,lrecv,tam);
  	return tam; 
 }
-int ReadRequest(unsigned char message[],int opcode){
+int ReadRequest(unsigned char message[],int opcode,int tam,int udp_socket,struct sockaddr_in remota,int lrecv){
 	/*2 bytes     string    1 byte     string   1 byte
      ------------------------------------------------
     | Opcode |  Filename  |   0  |    Mode    |   0  |
      ------------------------------------------------ */
-	int tam = 0;
-	buffer[0] = 0x00;
-	buffer[1] = 0x01;
-	printf("ReadRequest Function in Acction\n");
+	fileout = NULL;
+	printf("ReadRequest Function in Action\n");
+	char filename[80];
+	strcpy(filename,message+2);
+	printf("file name: %s\n",filename);
+	//We need to know if the file exist or not, if it doesn't exits we should send an Error 
+	fileout = fopen(filename,"rb");
+	if(fileout == NULL){
+		printf("File not found\n");
+		tam = Error("File not found",opcode,1,udp_socket,remota);
+	}
+	counterInteger++;
+	tam = Data(message,opcode,udp_socket,remota,lrecv,tam);
 	return tam;
 }
 int Data(unsigned char message[],int opcode,int udp_socket,struct sockaddr_in remota,int lrecv,int tam){
@@ -199,21 +213,33 @@ int Data(unsigned char message[],int opcode,int udp_socket,struct sockaddr_in re
 	//strcpy(buffer,message+4);
 	//printf("%s\n",buffer);
 	//printf("DATA tam: %d\n",tam );
-	if(tam != 512){
+	size_t n;
+	printf("Data Function in action TAM: %d\n",tam);
+	if(tam != 512 && tam != -1){
 		tam = tam - 4;
 		printf("DATA tam: %d\n",tam );
 	}
-	printf("%s\n",message+4);
 	if(WRFlag){
 		fwrite(message+4,1,tam,filein);
+		printf("We got a DATA package\nstrlen BUFFER: %ld\n",strlen(buffer));
+		Acknowledment(message,opcode,udp_socket,remota,lrecv,tam);
+	}else{
+		/*We start sending the info of the file*/
+		buffer[0] = 0x00;
+		buffer[1] = 0x03;
+		buffer[2] = counterInteger >> 8;
+		buffer[3] = counterInteger;
+		n = fread(buffer+4,1,sizeof(buffer)-4,fileout);
+		sendto(udp_socket,buffer,n+4,MSG_DONTWAIT,(struct sockaddr *)&remota,sizeof(remota));
+		printf("We had send the file\n Block #: %d\n",counterInteger);
+		printf("lenght of fread files %ld\n",n);
+		counterInteger++;
+		tam = n;
+		printf("lenght of fread files %d\n",tam);
 	}
-	printf("We got a DATA package\nstrlen BUFFER: %ld\n",strlen(buffer));
-	Acknowledment(opcode,udp_socket,remota);
-	tam = strlen(message+4);
-
 	return tam;
 }
-int Acknowledment(int opcode,int udp_socket,struct sockaddr_in remota){
+int Acknowledment(unsigned char message[],int opcode,int udp_socket,struct sockaddr_in remota,int lrecv,int tam){
 	/* 2 bytes     2 bytes
       ---------------------
      | Opcode |   Block #  |
@@ -222,27 +248,56 @@ int Acknowledment(int opcode,int udp_socket,struct sockaddr_in remota){
 	So what we need is the number of the block we got
 	We add a counter.. 
 	*/
-	int tam = 0;
-	printf("Acknowledment #:%d\n",counterInteger);
-	memset(buffer,0,sizeof(buffer));
-	buffer[0] = 0x00;
-	buffer[1] = 0x04;
-	buffer[2] = counterInteger >> 8;
-	buffer[3] = counterInteger;
-	tam = sendto(udp_socket,buffer,512,MSG_DONTWAIT,(struct sockaddr *)&remota,sizeof(remota));
-	printf("We have sented the Acknowledment #:%d\n",counterInteger);
-	memset(buffer,0,sizeof(buffer));
-	counterInteger++;
+	int blockNumber;
+	if(WRFlag){
+		printf("Acknowledment #:%d\n",counterInteger);
+		memset(buffer,0,sizeof(buffer));
+		buffer[0] = 0x00;
+		buffer[1] = 0x04;
+		buffer[2] = counterInteger >> 8;
+		buffer[3] = counterInteger;
+		tam = sendto(udp_socket,buffer,5,MSG_DONTWAIT,(struct sockaddr *)&remota,sizeof(remota));
+		printf("We have sented the Acknowledment #:%d\n",counterInteger);
+		memset(buffer,0,sizeof(buffer));
+		counterInteger++;
+	}else{
+		/*In this function we check if the acknowledment that we recive is the same as the one we are
+		waiting for, if not we send a Error*/
+		blockNumber = ((int) message[2]>>8) + ((int) message[3]) + 1;
+		printf("blockNumber%d\n",blockNumber);
+		if(blockNumber == counterInteger){
+			tam = Data(message,opcode,udp_socket,remota,lrecv,tam);
+		}else{
+			Error("Data package Error",opcode,5,udp_socket,remota);
+		}
+	}
 	return tam;
 }
-int Error(unsigned char message[],int opcode){
+int Error(unsigned char message[],int opcode,int ErrorCode,int udp_socket,struct sockaddr_in remota){
 	/*2 bytes     2 bytes      string    1 byte
     -----------------------------------------
    | Opcode |  ErrorCode |   ErrMsg   |   0  |
     -----------------------------------------*/
-    int tam = 0;
-    buffer[0] = 0x00;
-    buffer[1] = 0x05;
-    printf("Error ocurr\n");
+    /*0         Not defined, see error message (if any).
+   	  1         File not found.
+      2         Access violation.
+   	  3         Disk full or allocation exceeded.
+   	  4         Illegal TFTP operation.
+   	  5         Unknown transfer ID.
+   	  6         File already exists.
+   	  7         No such user.*/
+	printf("Error Function in Action\n");
+	memset(buffer,0,sizeof(buffer));
+	buffer[0] = 0x00;
+	buffer[1] = 0x05;
+	printf("ErrorCode in Error Function%d\n",ErrorCode);
+	buffer[2] = 0x00;
+	buffer[3] = 0x01;
+	strcpy(buffer+4,message);
+	int tam = strlen(message)+4;
+	buffer[tam] = 0x00;
+
+    sendto(udp_socket,buffer,tam+1,MSG_DONTWAIT,(struct sockaddr *)&remota,sizeof(remota));
+    printf("debug\n");
     return tam;
 }
