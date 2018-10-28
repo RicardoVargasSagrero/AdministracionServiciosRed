@@ -39,8 +39,8 @@ int WRFlag;
 int main(int argc, char const *argv[])
 {
 	int opcode,i,contTrama = 0;
-	char filename[100] = "panda2.jpg",c,mode[10];
-	char ip[15] = "10.100.77.223";
+	char filename[100] = "Kalimba.mp3",c,mode[10];
+	char ip[15] = "192.168.1.65";
  	struct sockaddr_in local, remota;    
 	int udp_socket,lbind,tam,lrecv,bandera;
 	unsigned char message[516];
@@ -251,6 +251,7 @@ int Data(unsigned char message[],int opcode,int udp_socket,struct sockaddr_in re
 	//printf("DATA tam: %d\n",tam );
 	size_t n;
 	printf("Data Function in action TAM: %d\n",tam);
+	tam = tam - 4;
 	if(WRFlag){
 		printf("\tDATA ReadRequest\n\n\n");
 		
