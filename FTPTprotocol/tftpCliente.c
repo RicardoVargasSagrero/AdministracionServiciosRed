@@ -39,7 +39,7 @@ int WRFlag;
 int main(int argc, char const *argv[])
 {
 	int opcode,i,contTrama = 0;
-	char filename[100] = "Kalimba.mp3",c,mode[10];
+	char filename[100] = "audifonos.jpg",c,mode[10];
 	char ip[15] = "192.168.1.65";
  	struct sockaddr_in local, remota;    
 	int udp_socket,lbind,tam,lrecv,bandera;
@@ -50,9 +50,10 @@ int main(int argc, char const *argv[])
 	printf("\tTFTP client\nEnter the HOST IP: \n");
 	//scanf("%s",ip);
 	printf("Enter the LOCAL FILE or REMOTE FILE: \n");
-	//scanf("%s",filename);
+	scanf("%s",filename);
 	printf("\nEnter oparation\n\t1.- ReadRequest\n\t2.- WriteRequest\n");
 	scanf("%d",&opcode);
+	printf("%s\n",filename);
 	if(opcode == 1){
 		filein = fopen(filename,"wb+");
 		WRFlag = 1;
@@ -89,12 +90,12 @@ int main(int argc, char const *argv[])
 	       bandera=0;
 	       /*In the next section we assamble the first message*/
 		   FirstMessage(opcode,filename,udp_socket,remota);
-	       while(mtime<500000)
+	       while(mtime<10000 || tam >= 512)
 	       {
 	       //sleep(1);
-	       //tam=recvfrom(udp_socket,message,516,MSG_DONTWAIT,(struct sockaddr*)&remota,&lrecv);
+	       tam=recvfrom(udp_socket,message,516,MSG_DONTWAIT,(struct sockaddr*)&remota,&lrecv);
 	       //printf("TAM inicial = %d",tam);
-	       tam = 512;
+	       //tam = 512;
 	       if(tam==-1){
 	       	//perror("\nError al recibir");
 	       }
@@ -102,9 +103,9 @@ int main(int argc, char const *argv[])
 	        {
 	         printf("\nExito al recibir: %s\n",message);
 	         /*Se hace lectura de los codigos de operacion dados en los primeros 2 bytes del message*/
-	         do{
+	         
 	         	//memset(message,0x00,sizeof(message));
-	         	tam=recvfrom(udp_socket,message,516,0,(struct sockaddr*)&remota,&lrecv);
+	         	//tam=recvfrom(udp_socket,message,516,0,(struct sockaddr*)&remota,&lrecv);
 	         	printf("tam %d, puerto %d\n", tam,htons(remota.sin_port));
 	         	opcode = (int)message[1];
 	         	printf("%c\n",message[1] );
@@ -147,22 +148,23 @@ int main(int argc, char const *argv[])
 	        	}
 	        	printf("\n\tWHILE DONE\n");
 	        	memset(message,0x00,sizeof(message));
-	        }while(tam >= 512);
+	        
 
 	        //fclose(filein);
 	        //fclose(fileout);
-	        printf("Before segmentation fault\n");
-	        bandera=1;
+	        printf("****Before segmentation fault\n");
+	        //bandera=1;
 	         /*EN ESTA PARTE SE REALIZAN LA VALIDACION DE LOS CODIGOS
 	         DE OPERACION PARA ENTRAR A LAS FUNCIONES*/
+	        
 	        }
 	        gettimeofday(&end, NULL);
 	        seconds  = end.tv_sec  - start.tv_sec;
 	        useconds = end.tv_usec - start.tv_usec;
 	        mtime = ((seconds) * 1000 + useconds/1000.0) + 0.5;
 	        //printf("Elapsed time: %ld milliseconds\n", mtime);
-	        if(bandera==1)
-	            break;
+	        //if(bandera==1)
+	          //  break;
 	        }
 	    }
 	}
@@ -254,13 +256,19 @@ int Data(unsigned char message[],int opcode,int udp_socket,struct sockaddr_in re
 	tam = tam - 4;
 	if(WRFlag){
 		printf("\tDATA ReadRequest\n\n\n");
-		
+		if(filein == NULL){
+			Error("No such file or directory",opcode,5,udp_socket,remota);
+			exit(0);
+		}
 		fwrite(message+4,1,tam,filein);
 		printf("We got a DATA package\nstrlen BUFFER: %ld\n",strlen(buffer));
 		Acknowledment(message,opcode,udp_socket,remota,lrecv,tam);
 	}else{
 		/*We start sending the info of the file*/
 		printf("\tDATA WriteRequest\n");
+		if(fileout == NULL){
+			Error("",5,1,udp_socket,remota);
+		}
 		counterInteger++;
 		buffer[0] = 0x00;
 		buffer[1] = 0x03;
@@ -304,7 +312,8 @@ int Acknowledment(unsigned char message[],int opcode,int udp_socket,struct socka
 		printf("blockNumber %d\n",blockNumber);
 		if(blockNumber == counterInteger){
 			tam = Data(message,opcode,udp_socket,remota,lrecv,tam);
-		}else{
+		}
+		else{
 			Error("Data package Error",opcode,5,udp_socket,remota);
 		}
 	}
@@ -323,6 +332,21 @@ int Error(unsigned char message[],int opcode,int ErrorCode,int udp_socket,struct
    	  5         Unknown transfer ID.
    	  6         File already exists.
    	  7         No such user.*/
+	int tam = strlen(message)+4;
+	printf("opcode = %d\n",opcode );
+	if(opcode == 0x05){
+		memset(buffer,0,sizeof(buffer));
+		printf("we recived an error\n");
+		buffer[0] = 0x00;
+		buffer[1] = 0x05;
+		buffer[2] = 0x00;
+		buffer[3] = 0x01;
+		strcpy(buffer+4,"");
+		buffer[6] = 0x00;
+		sendto(udp_socket,buffer,6,0,(struct sockaddr *)&remota,sizeof(remota));
+		close(udp_socket);
+		exit(0);
+	}
 	printf("Error Function in Action\n");
 	memset(buffer,0,sizeof(buffer));
 	buffer[0] = 0x00;
@@ -331,7 +355,7 @@ int Error(unsigned char message[],int opcode,int ErrorCode,int udp_socket,struct
 	buffer[2] = 0x00;
 	buffer[3] = 0x01;
 	strcpy(buffer+4,message);
-	int tam = strlen(message)+4;
+	
 	buffer[tam] = 0x00;
 
     sendto(udp_socket,buffer,tam+1,0,(struct sockaddr *)&remota,sizeof(remota));
