@@ -24,7 +24,6 @@ or about 32 megabytes.
 #include <sys/time.h>
 #include <string.h>
 
-FILE *fileCopy(FILE *f,char *filename);
 /*Operacion con los oparation codes, simple construccion, del 1 al 5*/
 int FirstMessage(int,unsigned char[],int,struct sockaddr_in);
 int ReadRequest(unsigned char[],int,int,int,struct sockaddr_in,int);
@@ -38,15 +37,14 @@ unsigned char buffer[516];
 int WRFlag; 
 int main(int argc, char const *argv[])
 {
-	int opcode,i,contTrama = 0;
-	char filename[100] = "audifonos.jpg",c,mode[10];
+	int opcode;
+	char filename[100] = "audifonos.jpg";
 	char ip[15] = "10.0.2.15";
  	struct sockaddr_in local, remota;    
-	int udp_socket,lbind,tam,lrecv,bandera;
+	int udp_socket,lbind,tam,lrecv;
 	unsigned char message[516];
 	struct timeval start, end;
 	long mtime=0, seconds, useconds; 
-	int fff = 0 ;
 	printf("\tTFTP client\nEnter the HOST IP: \n");
 	//scanf("%s",ip);
 	printf("Enter the LOCAL FILE or REMOTE FILE: \n");
@@ -87,7 +85,6 @@ int main(int argc, char const *argv[])
 	       remota.sin_port = htons(69);
 	       remota.sin_addr.s_addr=inet_addr(ip);
 	       gettimeofday(&start, NULL);
-	       bandera=0;
 	       /*In the next section we assamble the first message*/
 		   FirstMessage(opcode,filename,udp_socket,remota);
 	       while(mtime<10000 || tam >= 512)
@@ -110,7 +107,6 @@ int main(int argc, char const *argv[])
 	         	opcode = (int)message[1];
 	         	printf("%c\n",message[1] );
 	        	printf("Opcode = %d\n",opcode);
-	        	fff = tam;
 	         	switch(opcode){
 	         		case 1:
 	         			WRFlag = 0;
@@ -153,9 +149,6 @@ int main(int argc, char const *argv[])
 	        //fclose(filein);
 	        //fclose(fileout);
 	        printf("****Before segmentation fault\n");
-	        //bandera=1;
-	         /*EN ESTA PARTE SE REALIZAN LA VALIDACION DE LOS CODIGOS
-	         DE OPERACION PARA ENTRAR A LAS FUNCIONES*/
 	        
 	        }
 	        gettimeofday(&end, NULL);
@@ -163,7 +156,7 @@ int main(int argc, char const *argv[])
 	        useconds = end.tv_usec - start.tv_usec;
 	        mtime = ((seconds) * 1000 + useconds/1000.0) + 0.5;
 	        //printf("Elapsed time: %ld milliseconds\n", mtime);
-	        //if(bandera==1)
+	        //if(==1)
 	          //  break;
 	        }
 	    }
@@ -185,22 +178,6 @@ int FirstMessage(int opcode,unsigned char filename[],int udp_socket,struct socka
 	sendto(udp_socket,buffer,tam+1,MSG_DONTWAIT,(struct sockaddr *) &remota,sizeof(remota));
 	printf("FirstMessage send successfully\n");
 	return 0;
-}
-FILE *fileCopy(FILE *f,char *filename){
-	FILE *fc;
-	char c;
-	printf("\tFunction cpFile\n");
-	printf("Enter a name for the copy: \n");
-	scanf("%s",filename);
-	fc = fopen(filename,"a");
-	if(fc != NULL){
-		while((c = fgetc(f))!= EOF){
-			fputc(c,fc);		
-		}
-		printf("File copied successfully.\n");
-	}
-
-	return fc;
 }
 int WriteRequest(unsigned char message[],int opcode,int udp_socket,struct sockaddr_in remota,int lrecv){
 	/*From the side of the server we recived a Write Request

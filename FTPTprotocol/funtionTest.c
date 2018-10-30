@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <string.h>
-
+FILE *fileCopy(FILE *f,char *filename);
 int main(){
 	unsigned char filename[] = "Hola.txt";
 	unsigned char trama[100];
@@ -24,4 +24,20 @@ int main(){
 		printf("%c ",trama[i]);
 	printf("\n");
 	return 0;
+}
+FILE *fileCopy(FILE *f,char *filename){
+	FILE *fc;
+	char c;
+	printf("\tFunction cpFile\n");
+	printf("Enter a name for the copy: \n");
+	scanf("%s",filename);
+	fc = fopen(filename,"a");
+	if(fc != NULL){
+		while((c = fgetc(f))!= EOF){
+			fputc(c,fc);		
+		}
+		printf("File copied successfully.\n");
+	}
+
+	return fc;
 }
