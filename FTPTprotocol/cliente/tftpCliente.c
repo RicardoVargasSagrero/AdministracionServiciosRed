@@ -40,7 +40,7 @@ int main(int argc, char const *argv[])
 {
 	int opcode,i,contTrama = 0;
 	char filename[100] = "audifonos.jpg",c,mode[10];
-	char ip[15] = "192.168.1.65";
+	char ip[15] = "10.0.2.15";
  	struct sockaddr_in local, remota;    
 	int udp_socket,lbind,tam,lrecv,bandera;
 	unsigned char message[516];
