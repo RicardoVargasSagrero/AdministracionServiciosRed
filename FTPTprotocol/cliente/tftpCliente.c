@@ -38,8 +38,8 @@ int WRFlag;
 int main(int argc, char const *argv[])
 {
 	int opcode;
-	char filename[100] = "audifonos.jpg";
-	char ip[15] = "10.0.2.15";
+	char filename[100] = "tftpCliente.c";
+	char ip[15] = "192.168.43.253";
  	struct sockaddr_in local, remota;    
 	int udp_socket,lbind,tam,lrecv;
 	unsigned char message[516];
@@ -48,7 +48,7 @@ int main(int argc, char const *argv[])
 	printf("\tTFTP client\nEnter the HOST IP: \n");
 	//scanf("%s",ip);
 	printf("Enter the LOCAL FILE or REMOTE FILE: \n");
-	scanf("%s",filename);
+	//scanf("%s",filename);
 	printf("\nEnter oparation\n\t1.- ReadRequest\n\t2.- WriteRequest\n");
 	scanf("%d",&opcode);
 	printf("%s\n",filename);
@@ -87,9 +87,10 @@ int main(int argc, char const *argv[])
 	       gettimeofday(&start, NULL);
 	       /*In the next section we assamble the first message*/
 		   FirstMessage(opcode,filename,udp_socket,remota);
-	       while(mtime<10000 || tam >= 512)
+	       while(mtime<10000 && ((tam >= 512) || tam == -1 ))
 	       {
 	       //sleep(1);
+	       tam = 512;
 	       tam=recvfrom(udp_socket,message,516,MSG_DONTWAIT,(struct sockaddr*)&remota,&lrecv);
 	       //printf("TAM inicial = %d",tam);
 	       //tam = 512;
@@ -148,16 +149,15 @@ int main(int argc, char const *argv[])
 
 	        //fclose(filein);
 	        //fclose(fileout);
-	        printf("****Before segmentation fault\n");
+	        printf("**Last tam after the switch %d\n",tam);
 	        
 	        }
+	        //printf("Tam after else%d\n",tam);
 	        gettimeofday(&end, NULL);
 	        seconds  = end.tv_sec  - start.tv_sec;
 	        useconds = end.tv_usec - start.tv_usec;
 	        mtime = ((seconds) * 1000 + useconds/1000.0) + 0.5;
 	        //printf("Elapsed time: %ld milliseconds\n", mtime);
-	        //if(==1)
-	          //  break;
 	        }
 	    }
 	}

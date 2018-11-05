@@ -24,7 +24,6 @@ or about 32 megabytes.
 #include <sys/time.h>
 #include <string.h>
 
-FILE *fileCopy(FILE *f,char *filename);
 /*Operacion con los oparation codes, simple construccion, del 1 al 5*/
 int ReadRequest(unsigned char[],int,int,int,struct sockaddr_in,int);
 int WriteRequest(unsigned char [],int, int, struct sockaddr_in,int);
@@ -70,9 +69,12 @@ int main(int argc, char const *argv[])
 	       lrecv=sizeof(remota);
 	       gettimeofday(&start, NULL);
 	       bandera=0;
-	       while(mtime<500000)
+	       //tam=recvfrom(udp_socket,message,512,0,(struct sockaddr*)&remota,&lrecv);
+	       tam = 516;
+	       while(mtime<100000 && ((tam >= 512) || tam == -1))
 	       {
-	       tam=recvfrom(udp_socket,message,512,MSG_DONTWAIT,(struct sockaddr*)&remota,&lrecv);
+	       	printf("We have enter the while cicle\n");
+	       tam=recvfrom(udp_socket,message,516,0,(struct sockaddr*)&remota,&lrecv);
 	       //printf("TAM inicial = %d",tam);
 	       if(tam==-1){
 	       	//perror("\nError al recibir");
@@ -83,9 +85,8 @@ int main(int argc, char const *argv[])
 	         /*Se hace lectura de los codigos de operacion dados en los primeros 2 bytes del message*/
 	         opcode = message[1] + 0x0000;
 	         printf("%d\n",opcode);
-	         do{
-	         	usleep(100000);
-	         	tam=recvfrom(udp_socket,message,516,MSG_DONTWAIT,(struct sockaddr*)&remota,&lrecv);
+	         	//usleep(100000);
+	         	//tam=recvfrom(udp_socket,message,516,0,(struct sockaddr*)&remota,&lrecv);
 	         	printf("tam %d\n", tam);
 	         	opcode = message[1] + 0x0000;
 	        	printf("%d\n",opcode);
@@ -125,12 +126,11 @@ int main(int argc, char const *argv[])
 	         			printf("Error en codigo de operacion, esperando nueva respuesta\n");
 	         			break;
 	        	}
-	        }while(tam >= 512);
+	        
 
 	        //fclose(filein);
 	        //fclose(fileout);
-	        printf("Before segmentation fault\n");
-	        bandera=1;
+	        printf("Before segmentation fault %d\n",tam);
 	         /*EN ESTA PARTE SE REALIZAN LA VALIDACION DE LOS CODIGOS
 	         DE OPERACION PARA ENTRAR A LAS FUNCIONES*/
 	        }
@@ -139,30 +139,13 @@ int main(int argc, char const *argv[])
 	        useconds = end.tv_usec - start.tv_usec;
 	        mtime = ((seconds) * 1000 + useconds/1000.0) + 0.5;
 	        //printf("Elapsed time: %ld milliseconds\n", mtime);
-	        if(bandera==1)
-	            break;
 	        }
+	        printf("EXIIIIIIIIIIIIIIIT\n");
 	    }
 	}
 	 
 	close(udp_socket);
 	return 0;
-}
-FILE *fileCopy(FILE *f,char *filename){
-	FILE *fc;
-	char c;
-	printf("\tFunction cpFile\n");
-	printf("Enter a name for the copy: \n");
-	scanf("%s",filename);
-	fc = fopen(filename,"a");
-	if(fc != NULL){
-		while((c = fgetc(f))!= EOF){
-			fputc(c,fc);		
-		}
-		printf("File copied successfully.\n");
-	}
-
-	return fc;
 }
 int WriteRequest(unsigned char message[],int opcode,int udp_socket,struct sockaddr_in remota,int lrecv){
 	/*From the side of the server we recived a Write Request
@@ -230,7 +213,7 @@ int Data(unsigned char message[],int opcode,int udp_socket,struct sockaddr_in re
 		buffer[2] = counterInteger >> 8;
 		buffer[3] = counterInteger;
 		n = fread(buffer+4,1,sizeof(buffer)-4,fileout);
-		sendto(udp_socket,buffer,n+4,MSG_DONTWAIT,(struct sockaddr *)&remota,sizeof(remota));
+		sendto(udp_socket,buffer,n+4,0,(struct sockaddr *)&remota,sizeof(remota));
 		printf("We had send the file\n Block #: %d\n",counterInteger);
 		printf("lenght of fread files %ld\n",n);
 		counterInteger++;
@@ -256,14 +239,15 @@ int Acknowledment(unsigned char message[],int opcode,int udp_socket,struct socka
 		buffer[1] = 0x04;
 		buffer[2] = counterInteger >> 8;
 		buffer[3] = counterInteger;
-		tam = sendto(udp_socket,buffer,5,MSG_DONTWAIT,(struct sockaddr *)&remota,sizeof(remota));
+		tam = sendto(udp_socket,buffer,5,0,(struct sockaddr *)&remota,sizeof(remota));
 		printf("We have sented the Acknowledment #:%d\n",counterInteger);
 		memset(buffer,0,sizeof(buffer));
 		counterInteger++;
+		tam = 512;
 	}else{
 		/*In this function we check if the acknowledment that we recive is the same as the one we are
 		waiting for, if not we send a Error*/
-		blockNumber = ((int) message[2]>>8) + ((int) message[3]) + 1;
+		blockNumber = ((int) message[2]<<8) + ((int) message[3]) + 1;
 		printf("blockNumber%d\n",blockNumber);
 		if(blockNumber == counterInteger){
 			tam = Data(message,opcode,udp_socket,remota,lrecv,tam);
@@ -297,7 +281,7 @@ int Error(unsigned char message[],int opcode,int ErrorCode,int udp_socket,struct
 	int tam = strlen(message)+4;
 	buffer[tam] = 0x00;
 
-    sendto(udp_socket,buffer,tam+1,MSG_DONTWAIT,(struct sockaddr *)&remota,sizeof(remota));
+    sendto(udp_socket,buffer,tam+1,0,(struct sockaddr *)&remota,sizeof(remota));
     printf("debug\n");
     return tam;
 }
