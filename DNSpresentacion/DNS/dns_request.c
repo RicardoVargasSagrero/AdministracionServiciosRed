@@ -53,9 +53,10 @@ int main(){
             //FirstMessage(opcode,filename,udp_socket,remota);
             FirstMessage(0,"",udp_socket,remota);
             printf("message send\n");
-            while(mtime < 100000){
+            while(mtime < 100){
               
             }
+            printf("Waiting for while\n");
             gettimeofday(&end, NULL);
             seconds  = end.tv_sec  - start.tv_sec;
             useconds = end.tv_usec - start.tv_usec;
@@ -97,17 +98,24 @@ void FirstMessage(int opcode,unsigned char filename[],int udp_socket,struct sock
   mensaje[10] = 0x00;
   mensaje[11] = 0x01;
   mensaje[12] = 0x03;
-  mensaje[13] = 0x77;
-  mensaje[14] = 0x77;
-  mensaje[15] = 0x77;
+  mensaje[13] = 0x77;//w
+  mensaje[14] = 0x77;//w
+  mensaje[15] = 0x77;//w
   mensaje[16] = 0x03;
-  mensaje[17] = 0x69;
-  mensaje[18] = 0x70;
-  mensaje[19] = 0x6e;
+  mensaje[17] = 0x69;//i
+  mensaje[18] = 0x70;//p
+  mensaje[19] = 0x6e;//n
   mensaje[20] = 0x02;
-  mensaje[21] = 0x6d;
-  mensaje[22] = 0x78;
+  mensaje[21] = 0x6d;//m
+  mensaje[22] = 0x78;//x
   mensaje[23] = 0x00;
+  //Type (Tipo)
   mensaje[24] = 0x00;
+  mensaje[25] = 0x01;
+  //Class (Clase)
+  mensaje[26] = 0x00;
+  mensaje[27] = 0x01;
+  //Records adicionales 
+
   sendto(udp_socket,mensaje,25,MSG_DONTWAIT,(struct sockaddr *) &remota,sizeof(remota));
 }
