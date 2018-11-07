@@ -79,19 +79,35 @@ void FirstMessage(int opcode,unsigned char filename[],int udp_socket,struct sock
   //Armamos la primer trama de prueba con DNS
   //00 00 03 77 77 77 03 69 70 6e 02 6d 78 00 00 
   mensaje[0] = 0x00;
-  mensaje[1] = 0x00;
-  mensaje[2] = 0x03;
-  mensaje[3] = 0x77;
-  mensaje[4] = 0x77;
-  mensaje[5] = 0x77;
-  mensaje[6] = 0x03;
-  mensaje[7] = 0x69;
-  mensaje[8] = 0x70;
-  mensaje[9] = 0x6e;
-  mensaje[10] = 0x02;
-  mensaje[11] = 0x6d;
-  mensaje[12] = 0x78;
-  mensaje[13] = 0x00;
-  mensaje[14] = 0x00;
-  sendto(udp_socket,mensaje,16,MSG_DONTWAIT,(struct sockaddr *) &remota,sizeof(remota));
+  mensaje[1] = 0x3d; //Le asignamos el ID 3D
+  //Flags
+  mensaje[2] = 0x00;
+  mensaje[3] = 0x01;
+  //Contador de peticiones (Questions), debe cambiar
+  mensaje[4] = 0x00;
+  mensaje[5] = 0x01;
+  //Answer RRS (Contador de RR(Resource Record) de respuesta)
+  //Cuando lleguen las respuestas este contador debe ah
+  mensaje[6] = 0x00;
+  mensaje[7] = 0x00;
+  //Authority RRs (Contador RR de autoridad)
+  mensaje[8] = 0x00;
+  mensaje[9] = 0x00;
+  //Addtional RRs (Contador Adicional de RRs)
+  mensaje[10] = 0x00;
+  mensaje[11] = 0x01;
+  mensaje[12] = 0x03;
+  mensaje[13] = 0x77;
+  mensaje[14] = 0x77;
+  mensaje[15] = 0x77;
+  mensaje[16] = 0x03;
+  mensaje[17] = 0x69;
+  mensaje[18] = 0x70;
+  mensaje[19] = 0x6e;
+  mensaje[20] = 0x02;
+  mensaje[21] = 0x6d;
+  mensaje[22] = 0x78;
+  mensaje[23] = 0x00;
+  mensaje[24] = 0x00;
+  sendto(udp_socket,mensaje,25,MSG_DONTWAIT,(struct sockaddr *) &remota,sizeof(remota));
 }

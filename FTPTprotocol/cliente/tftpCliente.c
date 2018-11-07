@@ -39,7 +39,7 @@ int main(int argc, char const *argv[])
 {
 	int opcode;
 	char filename[100] = "tftpCliente.c";
-	char ip[15] = "192.168.43.253";
+	char ip[15] = "10.100.78.101";
  	struct sockaddr_in local, remota;    
 	int udp_socket,lbind,tam,lrecv;
 	unsigned char message[516];
@@ -48,7 +48,7 @@ int main(int argc, char const *argv[])
 	printf("\tTFTP client\nEnter the HOST IP: \n");
 	//scanf("%s",ip);
 	printf("Enter the LOCAL FILE or REMOTE FILE: \n");
-	//scanf("%s",filename);
+	scanf("%s",filename);
 	printf("\nEnter oparation\n\t1.- ReadRequest\n\t2.- WriteRequest\n");
 	scanf("%d",&opcode);
 	printf("%s\n",filename);
