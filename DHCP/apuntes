@@ -1,0 +1,10 @@
+Poner el socket en modo broadcast: 
+	
+Cliente
+manda msj de broadcast sin IP, pregunta quien es un servidor DHCP (router)
+Servidor
+DHCPOFFER
+	IP,Macara,Gateway
+	Se necesita desactivar el DHCP de casa para no que reciba 
+	El socket debe estar escuchando por el puerto 68
+	Es con socket UDP

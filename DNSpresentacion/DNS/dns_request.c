@@ -25,6 +25,8 @@ void FirstMessage(int,unsigned char[],int,struct sockaddr_in);
 void opcodeOption();
 void flags();
 void contadores();
+void Query();
+void type();
 int main(){
     struct sockaddr_in local, remota, cliente;
     int udp_socket, lbind, tam, ptam,opcode,lrecv;
@@ -62,7 +64,8 @@ int main(){
             //while(mtime < 10000){
             	recvfrom(udp_socket,message,516,MSG_DONTWAIT,(struct sockaddr*)&remota,&lrecv);
               	printf("-----ID de transacción-----\n\t\t%.2X%.2X\n",message[0],message[1]);
-              	if(message[3] && 0x80){
+              	printf("-----Flags-----\n");
+              	if(message[2] && 0x80){
               		printf("\tRespuesta\n");
               	}else{
               		printf("\tSolicitud\n");
@@ -98,8 +101,8 @@ void FirstMessage(int opcode,unsigned char filename[],int udp_socket,struct sock
   message[0] = 0x00;
   message[1] = 0x3d; //Le asignamos el ID 3D
   //Flags
-  message[2] = 0x00;
-  message[3] = 0x01;
+  message[2] = 0x01;
+  message[3] = 0x00;
   //Contador de peticiones (Questions), debe cambiar
   message[4] = 0x00;
   message[5] = 0x01;
@@ -113,6 +116,8 @@ void FirstMessage(int opcode,unsigned char filename[],int udp_socket,struct sock
   //Addtional RRs (Contador Adicional de RRs)
   message[10] = 0x00;
   message[11] = 0x01;
+  //Querties
+  //Nombre: 
   message[12] = 0x03;
   message[13] = 0x77;//w
   message[14] = 0x77;//w
@@ -125,6 +130,7 @@ void FirstMessage(int opcode,unsigned char filename[],int udp_socket,struct sock
   message[21] = 0x6d;//m
   message[22] = 0x78;//x
   message[23] = 0x00;
+
   //Type (Tipo)
   message[24] = 0x00;
   message[25] = 0x01;
@@ -147,7 +153,7 @@ void opcodeOption(){
 	  else not define
 		*/
 	int opcode = 3;
-	opcode = (int) (((message[3] && 0x70) >> 3) + (message[3]>>3) && 0x1);
+	opcode = (int) ((message[2] && 0x78) >> 3);
 	switch(opcode){
 		case 0:
 			printf("\tSolicitud\n");
@@ -196,28 +202,27 @@ void flags(){
      -------------------------------------------------------------
 	*/
 	int auxFlag;
-	printf("-----Flags-----\n");
-	if((message[3] >> 2) && 1)
+	if((message[2] >> 2) && 1)
 		printf("\tAutoridad: Es Respuesta de Autoridad\n");
 	else{
 		printf("\tAutoridad: No es Respuesta de Autoridad\n");
 	}
-	if((message[3] >> 1) && 1)
+	if((message[2] >> 1) && 1)
 		printf("\tTruncado: El mensaje esta truncado\n");
 	else{
 		printf("\tTruncado: El mensaje de respuesta esta truncado\n");
 	}
-	if(message[3] && 1)
+	if(message[2] && 1)
 		printf("\tRecursión: Es una solicitud recursiva\n");
 	else{
 		printf("\tRecursión: NO es una solicitud recursiva\n");
 	}
-	if(message[4] >> 7)
+	if(message[3] >> 7)
 		printf("\tRecursión disponible: El servidor puede hacer consultas recurivas\n");
 	else{
 		printf("\tRecursión disponible: El servidor no puede hacer consultas recurivas \n");
 	}
-	auxFlag = (int)(message[4] && 0x0F);
+	auxFlag = (int)(message[3] && 0x0F);
 	printf("\tCódigo de retorno: ");
 	switch(auxFlag){
 		case 0:
@@ -260,8 +265,18 @@ void flags(){
 }
 void contadores(){
 	printf("-----Contadores------\n");
-	printf("\tContador de peticiones: %d\n", (int)message[5]);
-	printf("\tContador de RR de respuesta: %d\n",(int)message[6]);
-	printf("\tContador de RR de Autoridad: %d\n",(int)message[7]);
-	printf("\tContador de RR adicionales: %d\n",(int)message[8]);	
+	printf("\tContador de peticiones: %d\n", (int)((message[4]<<8)+(message[5])));
+	printf("\tContador de RR de respuesta: %d\n",(int)((message[6]<<8)+(message[7])));
+	printf("\tContador de RR de Autoridad: %d\n",(int)((message[8]<<8)+(message[9])));
+	printf("\tContador de RR adicionales: %d\n",(int)((message[10]<<8)+(message[11])));	
+}
+void Query(){
+	//Algoritmo para tranducir una petición DNS
+	//Esta apartir del message[9] y termina hasta el 
+	//strlen(message[9])
+
+}
+void type(){
+	int auxFlag,tam;
+	tam = strlen(message+12)+1;
 }
