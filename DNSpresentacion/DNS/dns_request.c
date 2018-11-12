@@ -35,7 +35,8 @@ int main(){
     unsigned char ip[15] = "8.8.8.8";
     int lenght;
     struct timeval start, end;
-    long mtime=0, seconds, useconds; 
+    long mtime=0, seconds, useconds;
+    system("clear"); 
     if( udp_socket == -1 ){
         perror("Error al abrir el socket");
         exit(1);
@@ -73,6 +74,7 @@ int main(){
               	opcodeOption();
               	flags();
               	contadores();
+              	Query();
               	gettimeofday(&end, NULL);
             	seconds  = end.tv_sec  - start.tv_sec;
             	useconds = end.tv_usec - start.tv_usec;
@@ -115,31 +117,33 @@ void FirstMessage(int opcode,unsigned char filename[],int udp_socket,struct sock
   message[9] = 0x00;
   //Addtional RRs (Contador Adicional de RRs)
   message[10] = 0x00;
-  message[11] = 0x01;
+  message[11] = 0x00;
   //Querties
   //Nombre: 
   message[12] = 0x03;
   message[13] = 0x77;//w
   message[14] = 0x77;//w
   message[15] = 0x77;//w
-  message[16] = 0x03;
-  message[17] = 0x69;//i
-  message[18] = 0x70;//p
-  message[19] = 0x6e;//n
-  message[20] = 0x02;
-  message[21] = 0x6d;//m
-  message[22] = 0x78;//x
-  message[23] = 0x00;
+  message[16] = 0x04;
+  message[17] = 'n';//i
+  message[18] = 'a';//p
+  message[19] = 's';//n
+  message[20] = 'a';
+  message[21] = 0x03;
+  message[22] = 'g';//m
+  message[23] = 'o';//x
+  message[24] = 'v';
+  message[25] = 0x00;
 
   //Type (Tipo)
-  message[24] = 0x00;
-  message[25] = 0x01;
-  //Class (Clase)
   message[26] = 0x00;
   message[27] = 0x01;
+  //Class (Clase)
+  message[28] = 0x00;
+  message[29] = 0x01;
   //Records adicionales 
 
-  sendto(udp_socket,message,25,MSG_DONTWAIT,(struct sockaddr *) &remota,sizeof(remota));
+  sendto(udp_socket,message,30,MSG_DONTWAIT,(struct sockaddr *) &remota,sizeof(remota));
 }
 void opcodeOption(){
 	//4 bits de codigo de operacion 
@@ -272,9 +276,51 @@ void contadores(){
 }
 void Query(){
 	//Algoritmo para tranducir una petición DNS
-	//Esta apartir del message[9] y termina hasta el 
-	//strlen(message[9])
-
+	//Esta apartir del message[12] y termina hasta el 
+	//strlen(message[12])
+	//Necesitamos sacar el tamaño de todo el mensaje para saber hasta donde
+	//se parara
+	printf("------Consultas (Queries)------\n");
+	printf("Nombre (name): ");
+	int i=13,lenght = strlen(message+12)+1,label,j;
+	label = (int) message[12];
+	for(j = 0;j <= label && i < lenght+12;j++,i++){
+		if(message[i] == 0x00){
+			break;
+		}
+		else if(j == label){
+			label = message[i];
+			j = -1;
+			printf(".");
+		}
+		else{
+			printf("%c",message[i]);
+		}
+	}
+	printf("\n------tipo (Type): ");
+	i = (int)message[13+lenght];
+	switch(i){
+		case 1:
+			printf("Registro host (Host Address)\n");
+			break;
+		case 2:
+			printf("Regustro (A) servidor de nombres\n");
+			break;
+		case 3:
+			printf("Registro alias (CNAME)\n");
+			break;
+		case 13:
+			printf("Registro de búsqueda inversa\n");
+			break;
+		default:
+			printf("No definido\n");
+	}
+	printf("%.2X\n",message[13+lenght] );
+	if(message[15+lenght] == 0x01){
+		printf("------Clase: IN (0x0001)------\n");
+	}else{
+		printf("------Clase no definida------\n");
+	}
 }
 void type(){
 	int auxFlag,tam;
