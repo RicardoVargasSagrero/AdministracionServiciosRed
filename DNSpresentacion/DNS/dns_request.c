@@ -100,6 +100,32 @@ void FirstMessage(int opcode,unsigned char filename[],int udp_socket,struct sock
   */
   //Armamos la primer trama de prueba con DNS
   //00 00 03 77 77 77 03 69 70 6e 02 6d 78 00 00 
+	char queryRequestMessage[100];
+	printf("Ingrese el nombre de dominio a buscar\n");
+	gets(queryRequestMessage);
+	printf("Query entered: %s\n",queryRequestMessage);
+	int cont = 1,i = 0,j = 1,k = 0,poss;
+	poss = 12;
+	while(i < strlen(queryRequestMessage)-1){
+		cont++;
+		i++;
+		if(queryRequestMessage[i] == '.'){
+			message[poss] = cont;
+			for(j = 1; j < cont; j++){
+				message[poss+j] = queryRequestMessage[j-1];
+				printf("metiendo %c, poss+j = %d,j = %d\n",queryRequestMessage[j-1],poss+j,j);
+			}
+			poss = poss+j+1;
+			cont = 0;
+			printf("\n");
+			printf("k = %d,i = %d\n",k,i);
+		}
+		printf("cont dentro %d\n",cont);
+	}
+	printf("cont fuera %d\n",cont);
+	
+
+
   message[0] = 0x00;
   message[1] = 0x3d; //Le asignamos el ID 3D
   //Flags
@@ -119,6 +145,10 @@ void FirstMessage(int opcode,unsigned char filename[],int udp_socket,struct sock
   message[10] = 0x00;
   message[11] = 0x00;
   //Querties
+  for(k = 12; k < strlen(message+12)+1;k++){
+		printf(" %c ",message[k]);
+	}
+	printf("\nFin de message\n");
   //Nombre: 
   message[12] = 0x03;
   message[13] = 0x77;//w
