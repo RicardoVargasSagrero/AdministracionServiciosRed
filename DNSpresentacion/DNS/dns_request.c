@@ -178,7 +178,7 @@ void FirstMessage(int opcode,unsigned char filename[],int udp_socket,struct sock
   printf("message[%d] = %.2X\n",poss,0x01);
   //Records adicionales 
 
-  sendto(udp_socket,message,poss,MSG_DONTWAIT,(struct sockaddr *) &remota,sizeof(remota));
+  sendto(udp_socket,message,poss+1,MSG_DONTWAIT,(struct sockaddr *) &remota,sizeof(remota));
 }
 void opcodeOption(){
 	//4 bits de codigo de operacion 
