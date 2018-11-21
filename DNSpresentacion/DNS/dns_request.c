@@ -63,6 +63,8 @@ int main(){
             FirstMessage(0,"",udp_socket,remota);
             printf("message send\n");
             //while(mtime < 10000){
+            //system("clear");
+            printf("************RESPUESTA DNS DEL SERVIDOR********************\n");
             	recvfrom(udp_socket,message,516,MSG_DONTWAIT,(struct sockaddr*)&remota,&lrecv);
               	printf("-----ID de transacción-----\n\t\t%.2X%.2X\n",message[0],message[1]);
               	printf("-----Flags-----\n");
@@ -100,32 +102,6 @@ void FirstMessage(int opcode,unsigned char filename[],int udp_socket,struct sock
   */
   //Armamos la primer trama de prueba con DNS
   //00 00 03 77 77 77 03 69 70 6e 02 6d 78 00 00 
-	char queryRequestMessage[100];
-	printf("Ingrese el nombre de dominio a buscar\n");
-	gets(queryRequestMessage);
-	printf("Query entered: %s\n",queryRequestMessage);
-	int cont = 1,i = 0,j = 1,k = 0,poss;
-	poss = 12;
-	while(i < strlen(queryRequestMessage)-1){
-		cont++;
-		i++;
-		if(queryRequestMessage[i] == '.'){
-			message[poss] = cont;
-			for(j = 1; j < cont; j++){
-				message[poss+j] = queryRequestMessage[j-1];
-				printf("metiendo %c, poss+j = %d,j = %d\n",queryRequestMessage[j-1],poss+j,j);
-			}
-			poss = poss+j+1;
-			cont = 0;
-			printf("\n");
-			printf("k = %d,i = %d\n",k,i);
-		}
-		printf("cont dentro %d\n",cont);
-	}
-	printf("cont fuera %d\n",cont);
-	
-
-
   message[0] = 0x00;
   message[1] = 0x3d; //Le asignamos el ID 3D
   //Flags
@@ -143,37 +119,66 @@ void FirstMessage(int opcode,unsigned char filename[],int udp_socket,struct sock
   message[9] = 0x00;
   //Addtional RRs (Contador Adicional de RRs)
   message[10] = 0x00;
-  message[11] = 0x00;
-  //Querties
-  for(k = 12; k < strlen(message+12)+1;k++){
-		printf(" %c ",message[k]);
+  	message[11] = 0x00;
+	char queryRequestMessage[100];
+	printf("Ingrese el nombre de dominio a buscar\n");
+	gets(queryRequestMessage);
+	printf("Query entered: %s\n",queryRequestMessage);
+	int cont = 1,i = 0,j = 0,k = 0,poss;
+	poss = 12;
+	while(i < strlen(queryRequestMessage)-1){
+		cont++;
+		i++;
+		if(queryRequestMessage[i] == '.'){
+			cont--;
+			printf("Dentro del IF = %d\n",cont);
+			message[poss+j] = cont;
+			printf("message[%d] = %.2X\n",poss+j,cont);
+			for(k = 0; k < cont; j++,k++){
+				message[poss+j+1] = queryRequestMessage[j];
+				printf("message[%d] = %c\n",poss+j+1,queryRequestMessage[j]);
+			}
+			j++;
+			cont = 0;
+			printf("\n");
+			//printf("k = %d,i = %d\n",k,i);
+		}else if(i == strlen(queryRequestMessage)-1){
+			printf("Dentro del IF = %d\n",cont);
+			message[poss+j] = cont;
+			printf("message[%d] = %.2X\n",poss+j,cont);
+			for(k = 0; k < cont; j++,k++){
+				message[poss+j+1] = queryRequestMessage[j];
+				printf("message[%d] = %c\n",poss+j+1,queryRequestMessage[j]);
+			}
+			poss = poss+j+1;
+			j++;
+			cont = 0;
+			printf("\n");
+		}
+		printf("cont dentro %d\n",cont);
 	}
-	printf("\nFin de message\n");
-  //Nombre: 
-  message[12] = 0x03;
-  message[13] = 0x77;//w
-  message[14] = 0x77;//w
-  message[15] = 0x77;//w
-  message[16] = 0x04;
-  message[17] = 'n';//i
-  message[18] = 'a';//p
-  message[19] = 's';//n
-  message[20] = 'a';
-  message[21] = 0x03;
-  message[22] = 'g';//m
-  message[23] = 'o';//x
-  message[24] = 'v';
-  message[25] = 0x00;
-
+	
+  //Querties
+  printf("\nFin de message\n");
+  message[poss] = 0x00;
+  printf("message[%d] = %.2X\n",poss,0x00);
+  poss++;
   //Type (Tipo)
-  message[26] = 0x00;
-  message[27] = 0x01;
+  message[poss] = 0x00;
+  printf("message[%d] = %.2X\n",poss,0x00);
+  poss++;
+  message[poss] = 0x01;
+  printf("message[%d] = %.2X\n",poss,0x01);
   //Class (Clase)
-  message[28] = 0x00;
-  message[29] = 0x01;
+  poss++;
+  message[poss] = 0x00;
+  printf("message[%d] = %.2X\n",poss,0x00);
+  poss++;
+  message[poss] = 0x01;
+  printf("message[%d] = %.2X\n",poss,0x01);
   //Records adicionales 
 
-  sendto(udp_socket,message,30,MSG_DONTWAIT,(struct sockaddr *) &remota,sizeof(remota));
+  sendto(udp_socket,message,poss,MSG_DONTWAIT,(struct sockaddr *) &remota,sizeof(remota));
 }
 void opcodeOption(){
 	//4 bits de codigo de operacion 
