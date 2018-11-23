@@ -20,13 +20,15 @@ http://www.tcpipguide.com/free/t_DNSMessageHeaderandQuestionSectionFormat.htm
 #include <sys/time.h>
 unsigned char message[516];
 unsigned char recibe[516];
-int counterInteger = 1;
+int answerRRS = 0; 
 void FirstMessage(int,unsigned char[],int,struct sockaddr_in);
 void opcodeOption();
 void flags();
 void contadores();
 void Query();
-void type();
+void Answer();
+void type(int);
+void urlPrint(int,int,int);
 int main(){
     struct sockaddr_in local, remota, cliente;
     int udp_socket, lbind, tam, ptam,opcode,lrecv;
@@ -78,6 +80,7 @@ int main(){
               	flags();
               	contadores();
               	Query();
+              	Answer();
               	gettimeofday(&end, NULL);
             	seconds  = end.tv_sec  - start.tv_sec;
             	useconds = end.tv_usec - start.tv_usec;
@@ -317,7 +320,8 @@ void flags(){
 void contadores(){
 	printf("-----Contadores------\n");
 	printf("\tContador de peticiones: %d\n", (int)((message[4]<<8)+(message[5])));
-	printf("\tContador de RR de respuesta: %d\n",(int)((message[6]<<8)+(message[7])));
+	answerRRS = (int)((message[6]<<8)+(message[7]));
+	printf("\tContador de RR de respuesta: %d\n",answerRRS);
 	printf("\tContador de RR de Autoridad: %d\n",(int)((message[8]<<8)+(message[9])));
 	printf("\tContador de RR adicionales: %d\n",(int)((message[10]<<8)+(message[11])));	
 }
@@ -346,29 +350,72 @@ void Query(){
 	}
 	printf("\n\tTipo (Type): ");
 	i = (int)message[13+lenght];
-	switch(i){
-		case 1:
-			printf("Registro host (Host Address)\n");
-			break;
-		case 2:
-			printf("Regustro (A) servidor de nombres\n");
-			break;
-		case 3:
-			printf("Registro alias (CNAME)\n");
-			break;
-		case 13:
-			printf("Registro de búsqueda inversa\n");
-			break;
-		default:
-			printf("No definido\n");
-	}
+	type(i);
 	if(message[15+lenght] == 0x01){
 		printf("\tClase: IN (0x0001)------\n");
 	}else{
 		printf("\tClase no definida------\n");
 	}
 }
-void type(){
-	int auxFlag,tam;
-	tam = strlen(message+12)+1;
+void Answer(){
+	printf("------Answer------\n");
+	int i,startAns = strlen(message+12)+1+4+12;
+	//Falta la parte de imprimir los valores anteriores
+	for(i = 0; i < answerRRS; i++){
+		printf("\tNombre (Name): %.2X%.2X\n",message[startAns],message[startAns+1]);
+		startAns = startAns + 2;
+		printf("\tTipo (Type): ");
+		type((int)((message[startAns] << 8) +(message[startAns+1])));
+		startAns = startAns + 2;
+		if(message[startAns+1] == 0x01){
+			printf("\tClase: IN (0x0001)------\n");
+		}else{
+			printf("\tClase no definida------\n");
+		}
+		startAns = startAns + 2;
+		printf("\tTiempo de vida (Time to live): %d\n",(int)((message[startAns]<<32)+(message[startAns+1]<<16)+(message[startAns+2]<<8)+(message[startAns+3])));
+		startAns = startAns + 4;
+		printf("\tLongitud de datos(Data lenght): %d\n",(int)((message[startAns]<<8)+(message[startAns+1])));
+		printf("startAns: %.2X\nNombre (name): ",message[startAns+2] );
+		urlPrint(startAns+1,(int)((message[startAns]<<8)+(message[startAns+1])),(int)message[startAns+2]);
+	}
+
+}
+void type(int index){
+	switch(index){
+		case 1: 
+			printf("Registro host\n");
+			break;
+		case 2: 
+			printf("Registro (A) servidor de nombres (Host Address)\n");
+			break;
+		case 5:
+			printf("Registro alisas (CNAME)\n");
+			break;
+		case 12:
+			printf("Registro de búsqueda inversa\n");
+			break;	
+		default:
+			printf("Registro no definido\n");
+			break;
+	}
+}
+void urlPrint(int start,int length,int label){
+	int j = 0;
+	int i=start;
+	label = (int) message[start];
+	for(j = 0;j <= label & i < length+start;j++,i++){
+		if(message[i] == 0x00){
+			break;
+		}
+		else if(j == label){
+			label = message[i];
+			j = -1;
+			printf(".");
+		}
+		else{
+			printf("%c",message[i]);
+		}
+	}
+	printf("\n");
 }
