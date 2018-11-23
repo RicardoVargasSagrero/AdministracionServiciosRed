@@ -65,10 +65,11 @@ int main(){
             //while(mtime < 10000){
             //system("clear");
             printf("************RESPUESTA DNS DEL SERVIDOR********************\n");
-            	recvfrom(udp_socket,message,516,MSG_DONTWAIT,(struct sockaddr*)&remota,&lrecv);
+            	recvfrom(udp_socket,message,516,0,(struct sockaddr*)&remota,&lrecv);
+ 
               	printf("-----ID de transacción-----\n\t\t%.2X%.2X\n",message[0],message[1]);
               	printf("-----Flags-----\n");
-              	if(message[2] && 0x80){
+              	if(message[2] & 0x80){
               		printf("\tRespuesta\n");
               	}else{
               		printf("\tSolicitud\n");
@@ -179,6 +180,7 @@ void FirstMessage(int opcode,unsigned char filename[],int udp_socket,struct sock
   //Records adicionales 
 
   sendto(udp_socket,message,poss+1,MSG_DONTWAIT,(struct sockaddr *) &remota,sizeof(remota));
+  //memset(&message,0x00,sizeof(message));
 }
 void opcodeOption(){
 	//4 bits de codigo de operacion 
@@ -191,29 +193,30 @@ void opcodeOption(){
 	  0x5 Actualización (Update)
 	  else not define
 		*/
+	printf("\tOpcode: ");
 	int opcode = 3;
-	opcode = (int) ((message[2] && 0x78) >> 3);
+	opcode = (int) ((message[2] & 0x78) >> 3);
 	switch(opcode){
 		case 0:
-			printf("\tSolicitud\n");
+			printf("Solicitud\n");
 			break;
 		case 1:
-			printf("\tSolicitud inversa\n");
+			printf("Solicitud inversa\n");
 			break;
 		case 2: 
-			printf("\tSolicitud del estado del servidor\n");
+			printf("Solicitud del estado del servidor\n");
 			break;
 		case 3:
-			printf("\tReservado\n");
+			printf("Reservado\n");
 			break;
 		case 4:
-			printf("\tNotificación\n");
+			printf("Notificación\n");
 			break;
 		case 5:
-			printf("\tActualización\n");
+			printf("Actualización\n");
 			break;
 		default:
-			printf("\tNo definido\n");
+			printf("No definido\n");
 	}
 }
 void flags(){
@@ -241,29 +244,38 @@ void flags(){
      -------------------------------------------------------------
 	*/
 	int auxFlag;
-	if((message[2] >> 2) && 1)
+	if((message[2] >> 2) & 1)
 		printf("\tAutoridad: Es Respuesta de Autoridad\n");
 	else{
-		printf("\tAutoridad: No es Respuesta de Autoridad\n");
+		printf("\tAutoridad: No es Respuesta de Autoridad (Server is not an authority for domain)\n");
 	}
-	if((message[2] >> 1) && 1)
-		printf("\tTruncado: El mensaje esta truncado\n");
-	else{
+	if((message[2] >> 1) & 1)
 		printf("\tTruncado: El mensaje de respuesta esta truncado\n");
+	else{
+		printf("\tTruncado: El mensaje de respuesta NO esta truncado\n");
 	}
-	if(message[2] && 1)
+	if(message[2] & 1)
 		printf("\tRecursión: Es una solicitud recursiva\n");
 	else{
 		printf("\tRecursión: NO es una solicitud recursiva\n");
 	}
-	if(message[3] >> 7)
-		printf("\tRecursión disponible: El servidor puede hacer consultas recurivas\n");
+	if(message[3] & 0x80)
+		printf("\tRecursión disponible: El servidor PUEDE hacer consultas recurivas\n");
 	else{
 		printf("\tRecursión disponible: El servidor no puede hacer consultas recurivas \n");
 	}
-	auxFlag = (int)(message[3] && 0x0F);
+	if(message[3] & 0x20)
+		printf("\tRespuesta auntenticada: la porcion de Respuesta/Autoridad fue auntenticada por el servidor\n");
+	else{
+		printf("\tRespuesta auntenticada: la porcion de Respuesta/Autoridad NO fue auntenticada por el servidor\n");
+	}
+	if(message[3] & 0x10)
+		printf("\tDatos no autenticados: Aceptable\n");
+	else{
+		printf("\tDatos no autenticados: NO Aceptable\n");
+	}
 	printf("\tCódigo de retorno: ");
-	switch(auxFlag){
+	switch((int)(message[3] & 0x0F)){
 		case 0:
 			printf("No ocurrio Error (No error occurred)\n");
 			break;
@@ -316,10 +328,10 @@ void Query(){
 	//Necesitamos sacar el tamaño de todo el mensaje para saber hasta donde
 	//se parara
 	printf("------Consultas (Queries)------\n");
-	printf("Nombre (name): ");
+	printf("\tNombre (name): ");
 	int i=13,lenght = strlen(message+12)+1,label,j;
 	label = (int) message[12];
-	for(j = 0;j <= label && i < lenght+12;j++,i++){
+	for(j = 0;j <= label & i < lenght+12;j++,i++){
 		if(message[i] == 0x00){
 			break;
 		}
@@ -332,7 +344,7 @@ void Query(){
 			printf("%c",message[i]);
 		}
 	}
-	printf("\n------tipo (Type): ");
+	printf("\n\tTipo (Type): ");
 	i = (int)message[13+lenght];
 	switch(i){
 		case 1:
@@ -350,11 +362,10 @@ void Query(){
 		default:
 			printf("No definido\n");
 	}
-	printf("%.2X\n",message[13+lenght] );
 	if(message[15+lenght] == 0x01){
-		printf("------Clase: IN (0x0001)------\n");
+		printf("\tClase: IN (0x0001)------\n");
 	}else{
-		printf("------Clase no definida------\n");
+		printf("\tClase no definida------\n");
 	}
 }
 void type(){
