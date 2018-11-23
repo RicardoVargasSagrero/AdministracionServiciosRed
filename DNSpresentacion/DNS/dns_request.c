@@ -27,7 +27,7 @@ void flags();
 void contadores();
 void Query();
 void Answer();
-void type(int);
+int type(int);
 void urlPrint(int,int,int);
 int main(){
     struct sockaddr_in local, remota, cliente;
@@ -359,13 +359,18 @@ void Query(){
 }
 void Answer(){
 	printf("------Answer------\n");
-	int i,startAns = strlen(message+12)+1+4+12;
+	int i,startAns = strlen(message+12)+1+4+12,t;
 	//Falta la parte de imprimir los valores anteriores
+	int lenght = (int)((message[startAns]&0x3F)<< 8) + (message[startAns+1]);
 	for(i = 0; i < answerRRS; i++){
-		printf("\tNombre (Name): %.2X%.2X\n",message[startAns],message[startAns+1]);
+		printf("\tNombre (Name): ");
+		if(message[startAns]>>6 == 3){
+			urlPrint(lenght+1,strlen(message+lenght)+1,message[lenght]);
+		}
 		startAns = startAns + 2;
-		printf("\tTipo (Type): ");
-		type((int)((message[startAns] << 8) +(message[startAns+1])));
+		printf("\n\tTipo (Type): ");
+		t = type((int)((message[startAns] << 8) +(message[startAns+1])));
+		printf("\n");
 		startAns = startAns + 2;
 		if(message[startAns+1] == 0x01){
 			printf("\tClase: IN (0x0001)------\n");
@@ -376,34 +381,44 @@ void Answer(){
 		printf("\tTiempo de vida (Time to live): %d\n",(int)((message[startAns]<<32)+(message[startAns+1]<<16)+(message[startAns+2]<<8)+(message[startAns+3])));
 		startAns = startAns + 4;
 		printf("\tLongitud de datos(Data lenght): %d\n",(int)((message[startAns]<<8)+(message[startAns+1])));
-		printf("startAns: %.2X\nNombre (name): ",message[startAns+2] );
-		urlPrint(startAns+1,(int)((message[startAns]<<8)+(message[startAns+1])),(int)message[startAns+2]);
+		printf("startAns: %.2X %.2X %.2X\n",message[startAns+2],message[startAns+3],message[startAns+4] );
+		printf("\t");
+		type(t);
+		if(message[startAns+2] >>6 == 3){
+			lenght = (int)((message[startAns+2]&0x3F)<< 8) + (message[startAns+3]);
+			urlPrint(lenght+1,strlen(message+lenght)+1,message[lenght]);
+			startAns = startAns+5;
+		}
+		else{
+			urlPrint(lenght+3,strlen(message+lenght)+1,message[lenght]);
+		}
 	}
 
 }
-void type(int index){
+int type(int index){
 	switch(index){
 		case 1: 
-			printf("Registro host\n");
+			printf("Registro host ");
 			break;
 		case 2: 
-			printf("Registro (A) servidor de nombres (Host Address)\n");
+			printf("Registro (A) servidor de nombres (Host Address) ");
 			break;
 		case 5:
-			printf("Registro alisas (CNAME)\n");
+			printf("Registro alisas (CNAME) ");
 			break;
 		case 12:
-			printf("Registro de búsqueda inversa\n");
+			printf("Registro de búsqueda inversa ");
 			break;	
 		default:
-			printf("Registro no definido\n");
+			printf("Registro no definido ");
 			break;
 	}
+	return index;
 }
 void urlPrint(int start,int length,int label){
 	int j = 0;
 	int i=start;
-	label = (int) message[start];
+	printf("start = %d, label = %d,length+start = %d\n",start,label,length+start );
 	for(j = 0;j <= label & i < length+start;j++,i++){
 		if(message[i] == 0x00){
 			break;
@@ -417,5 +432,6 @@ void urlPrint(int start,int length,int label){
 			printf("%c",message[i]);
 		}
 	}
+	label = (int) message[start];
 	printf("\n");
 }
