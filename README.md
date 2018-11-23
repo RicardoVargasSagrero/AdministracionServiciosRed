@@ -25,3 +25,15 @@ drwxr-xr-x 3 andrew833 staff 102 Feb 4 00:34 13
 In my case andrew833 is my username and staff is my group. Now I changed the ‘root‘ username with my username ‘andrew833’ by running this command. Don’t forget the * at the end of the line.
 
 sudo chown -R andrew833:staff *
+
+---Iniciar con repositorio--
+www.github.com/RicardoVargasSagrero
+git clone url/repositorio
+//Se empieza a trabajar
+git add . //Agrega todos los archivos cambiados
+git commit -m "Comentario" //hace el commit 
+git push //Sube los cambios al repositorio
+
+//Cuando inicies de nuevo a programar 
+git status //checa el status del repositorio
+git pull //Baja los ultimos cambios del repositorio
