@@ -201,7 +201,7 @@ void opcodeOption(){
 	opcode = (int) ((message[2] & 0x78) >> 3);
 	switch(opcode){
 		case 0:
-			printf("Solicitud\n");
+			printf("Solicitud (Standard Query)\n");
 			break;
 		case 1:
 			printf("Solicitud inversa\n");
@@ -368,9 +368,8 @@ void Answer(){
 			urlPrint(lenght+1,strlen(message+lenght)+1,message[lenght]);
 		}
 		startAns = startAns + 2;
-		printf("\n\tTipo (Type): ");
+		printf("\tTipo (Type): ");
 		t = type((int)((message[startAns] << 8) +(message[startAns+1])));
-		printf("\n");
 		startAns = startAns + 2;
 		if(message[startAns+1] == 0x01){
 			printf("\tClase: IN (0x0001)------\n");
@@ -381,36 +380,43 @@ void Answer(){
 		printf("\tTiempo de vida (Time to live): %d\n",(int)((message[startAns]<<32)+(message[startAns+1]<<16)+(message[startAns+2]<<8)+(message[startAns+3])));
 		startAns = startAns + 4;
 		printf("\tLongitud de datos(Data lenght): %d\n",(int)((message[startAns]<<8)+(message[startAns+1])));
-		printf("startAns: %.2X %.2X %.2X\n",message[startAns+2],message[startAns+3],message[startAns+4] );
-		printf("\t");
-		type(t);
-		if(message[startAns+2] >>6 == 3){
-			lenght = (int)((message[startAns+2]&0x3F)<< 8) + (message[startAns+3]);
-			urlPrint(lenght+1,strlen(message+lenght)+1,message[lenght]);
-			startAns = startAns+5;
+		//type(t);
+		if(t == 1){
+			printf("\tAddress = %d.%d.%d.%d\n",message[startAns+2],message[startAns+3],message[startAns+4],message[startAns+5]);
 		}
-		else{
-			urlPrint(lenght+3,strlen(message+lenght)+1,message[lenght]);
+		else if(t == 5){
+			printf("\tCNAME = ");
+			if(message[startAns+2] >>6 == 3){
+				lenght = (int)((message[startAns+2]&0x3F)<< 8) + (message[startAns+3]);
+				urlPrint(lenght+1,strlen(message+lenght)+1,message[lenght]);
+				startAns = startAns+4;
+			}
+			else{
+				lenght = strlen(message+startAns+2) + 1;
+				urlPrint(startAns+2+1,lenght,message[startAns+2]);
+				startAns = startAns + lenght+2;
+			}
 		}
+		printf("\n\n\n");
 	}
 
 }
 int type(int index){
 	switch(index){
 		case 1: 
-			printf("Registro host ");
+			printf("Registro host \n");
 			break;
 		case 2: 
-			printf("Registro (A) servidor de nombres (Host Address) ");
+			printf("Registro (A) servidor de nombres (Host Address) \n");
 			break;
 		case 5:
-			printf("Registro alisas (CNAME) ");
+			printf("Registro alisas (CNAME) \n");
 			break;
 		case 12:
-			printf("Registro de búsqueda inversa ");
+			printf("Registro de búsqueda inversa \n");
 			break;	
 		default:
-			printf("Registro no definido ");
+			printf("Registro no definido \n");
 			break;
 	}
 	return index;
@@ -418,7 +424,6 @@ int type(int index){
 void urlPrint(int start,int length,int label){
 	int j = 0;
 	int i=start;
-	printf("start = %d, label = %d,length+start = %d\n",start,label,length+start );
 	for(j = 0;j <= label & i < length+start;j++,i++){
 		if(message[i] == 0x00){
 			break;
