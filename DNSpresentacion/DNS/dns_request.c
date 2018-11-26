@@ -428,7 +428,12 @@ void urlPrint(int start,int length,int label){
 	int j = 0;
 	int i=start;
 	for(j = 0;j <= label & i < length+start;j++,i++){
-		if(message[i] == 0x00){
+		if(message[i]>>6 == 3){
+			length = (int)((message[i]&0x3F)<< 8) + (message[i+1]);
+			urlPrint(length+1,strlen(message+length)+1,message[length]);
+			break;
+		}
+		else if(message[i] == 0x00){
 			break;
 		}
 		else if(j == label){
