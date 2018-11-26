@@ -363,8 +363,10 @@ void Answer(){
 	//Falta la parte de imprimir los valores anteriores
 	int lenght = (int)((message[startAns]&0x3F)<< 8) + (message[startAns+1]);
 	for(i = 0; i < answerRRS; i++){
+		//printf("%.2X %.2X %.2X \n",message[startAns],message[startAns+1],message[startAns+2] );
 		printf("\tNombre (Name): ");
 		if(message[startAns]>>6 == 3){
+			lenght = (int)((message[startAns]&0x3F)<< 8) + (message[startAns+1]);
 			urlPrint(lenght+1,strlen(message+lenght)+1,message[lenght]);
 		}
 		startAns = startAns + 2;
@@ -372,7 +374,7 @@ void Answer(){
 		t = type((int)((message[startAns] << 8) +(message[startAns+1])));
 		startAns = startAns + 2;
 		if(message[startAns+1] == 0x01){
-			printf("\tClase: IN (0x0001)------\n");
+			printf("\tClase: IN (0x0001)\n");
 		}else{
 			printf("\tClase no definida------\n");
 		}
@@ -383,6 +385,7 @@ void Answer(){
 		//type(t);
 		if(t == 1){
 			printf("\tAddress = %d.%d.%d.%d\n",message[startAns+2],message[startAns+3],message[startAns+4],message[startAns+5]);
+			startAns = startAns + 6;
 		}
 		else if(t == 5){
 			printf("\tCNAME = ");
@@ -397,7 +400,7 @@ void Answer(){
 				startAns = startAns + lenght+2;
 			}
 		}
-		printf("\n\n\n");
+		printf("\n\n");
 	}
 
 }
