@@ -21,6 +21,8 @@ http://www.tcpipguide.com/free/t_DNSMessageHeaderandQuestionSectionFormat.htm
 unsigned char message[516];
 unsigned char recibe[516];
 int answerRRS = 0; 
+int autorityAns = 0;
+int additionalAns = 0;
 void FirstMessage(int,unsigned char[],int,struct sockaddr_in);
 void opcodeOption();
 void flags();
@@ -34,7 +36,7 @@ int main(){
     int udp_socket, lbind, tam, ptam,opcode,lrecv;
     udp_socket = udp_socket = socket(AF_INET, SOCK_DGRAM, 0);
     unsigned char filename[100] = "prueba.c";
-    unsigned char ip[15] = "8.8.8.8";
+    unsigned char ip[15] = "148.204.103.2";
     int lenght;
     struct timeval start, end;
     long mtime=0, seconds, useconds;
@@ -322,8 +324,10 @@ void contadores(){
 	printf("\tContador de peticiones: %d\n", (int)((message[4]<<8)+(message[5])));
 	answerRRS = (int)((message[6]<<8)+(message[7]));
 	printf("\tContador de RR de respuesta: %d\n",answerRRS);
-	printf("\tContador de RR de Autoridad: %d\n",(int)((message[8]<<8)+(message[9])));
-	printf("\tContador de RR adicionales: %d\n",(int)((message[10]<<8)+(message[11])));	
+	autorityAns = (int)((message[8]<<8)+(message[9]));
+	printf("\tContador de RR de Autoridad: %d\n",autorityAns);
+	additionalAns = (int)((message[10]<<8)+(message[11]));
+	printf("\tContador de RR adicionales: %d\n",additionalAns);	
 }
 void Query(){
 	//Algoritmo para tranducir una petición DNS
@@ -399,6 +403,110 @@ void Answer(){
 				urlPrint(startAns+2+1,lenght,message[startAns+2]);
 				startAns = startAns + lenght+2;
 			}
+		}
+		printf("\n\n");
+	}
+	printf("------Nombre de servidores de auridad (Authoritative nameservers)------\n");
+	for(i = 0; i < autorityAns; i++){
+		//printf("%.2X %.2X %.2X \n",message[startAns],message[startAns+1],message[startAns+2] );
+		printf("\tNombre (Name): ");
+		if(message[startAns]>>6 == 3){
+			lenght = (int)((message[startAns]&0x3F)<< 8) + (message[startAns+1]);
+			urlPrint(lenght+1,strlen(message+lenght)+1,message[lenght]);
+		}
+		startAns = startAns + 2;
+		printf("\tTipo (Type): ");
+		t = type((int)((message[startAns] << 8) +(message[startAns+1])));
+		startAns = startAns + 2;
+		if(message[startAns+1] == 0x01){
+			printf("\tClase: IN (0x0001)\n");
+		}else{
+			printf("\tClase no definida------\n");
+		}
+		startAns = startAns + 2;
+		printf("\tTiempo de vida (Time to live): %d\n",(int)((message[startAns]<<32)+(message[startAns+1]<<16)+(message[startAns+2]<<8)+(message[startAns+3])));
+		startAns = startAns + 4;
+		printf("\tLongitud de datos(Data lenght): %d\n",(int)((message[startAns]<<8)+(message[startAns+1])));
+		//type(t);
+		if(t == 1){
+			printf("\tAddress = %d.%d.%d.%d\n",message[startAns+2],message[startAns+3],message[startAns+4],message[startAns+5]);
+			startAns = startAns + 6;
+		}
+		else if(t == 5){
+			printf("\tCNAME = ");
+			if(message[startAns+2] >>6 == 3){
+				lenght = (int)((message[startAns+2]&0x3F)<< 8) + (message[startAns+3]);
+				urlPrint(lenght+1,strlen(message+lenght)+1,message[lenght]);
+				startAns = startAns+4;
+			}
+			else{
+				lenght = strlen(message+startAns+2) + 1;
+				urlPrint(startAns+2+1,lenght,message[startAns+2]);
+				startAns = startAns + lenght+2;
+			}
+		}else{
+			printf("\tNombre de servidor (name server) = ");
+			lenght = strlen(message+startAns+2) + 1;
+			urlPrint(startAns+2+1,lenght,message[startAns+2]);
+			startAns = startAns + lenght-1;
+		}
+		printf("\n\n");
+	}
+	printf("------Records adicionales (Adicional Records)------\n");
+	for(i = 0; i < additionalAns; i++){
+		//printf("%.2X %.2X %.2X \n",message[startAns],message[startAns+1],message[startAns+2] );
+		printf("Repuesta %d\n\tNombre (Name): ",i);
+		if(message[startAns]>>6 == 3){
+			lenght = (int)((message[startAns]&0x3F)<< 8) + (message[startAns+1]);
+			urlPrint(lenght+1,strlen(message+lenght)+1,message[lenght]);
+		}
+		startAns = startAns + 2;
+		printf("\tTipo (Type): ");
+		t = type((int)((message[startAns] << 8) +(message[startAns+1])));
+		startAns = startAns + 2;
+		if(message[startAns+1] == 0x01){
+			printf("\tClase: IN (0x0001)\n");
+		}else{
+			printf("\tClase no definida------\n");
+		}
+		startAns = startAns + 2;
+		printf("\tTiempo de vida (Time to live): %d\n",(int)((message[startAns]<<32)+(message[startAns+1]<<16)+(message[startAns+2]<<8)+(message[startAns+3])));
+		startAns = startAns + 4;
+		printf("\tLongitud de datos(Data lenght): %d\n",(int)((message[startAns]<<8)+(message[startAns+1])));
+		//type(t);
+		if(t == 1){
+			printf("\tAddress = %d.%d.%d.%d\n",message[startAns+2],message[startAns+3],message[startAns+4],message[startAns+5]);
+			startAns = startAns + 6;
+		}
+		else if(t == 5){
+			printf("\tCNAME = ");
+			if(message[startAns+2] >>6 == 3){
+				lenght = (int)((message[startAns+2]&0x3F)<< 8) + (message[startAns+3]);
+				urlPrint(lenght+1,strlen(message+lenght)+1,message[lenght]);
+				startAns = startAns+4;
+			}
+			else{
+				lenght = strlen(message+startAns+2) + 1;
+				urlPrint(startAns+2+1,lenght,message[startAns+2]);
+				startAns = startAns + lenght+2;
+			}
+		}
+		else if(t == 28){
+			printf("\tAAAA Address = ");
+			startAns = startAns +2;
+			for(t = 0; t < 16;t++,startAns++){
+				if(t == 2 || t == 5 || t == 8 || t == 11 || t == 14 ){
+					printf(":");
+				}
+				printf("%.2X",message[startAns]);
+			}
+			printf("\n");	
+		}
+		else{
+			printf("\tNombre de servidor (name server) = ");
+			lenght = strlen(message+startAns+2) + 1;
+			urlPrint(startAns+2+1,lenght,message[startAns+2]);
+			startAns = startAns + lenght-1;
 		}
 		printf("\n\n");
 	}
