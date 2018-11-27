@@ -137,51 +137,51 @@ void FirstMessage(int opcode,unsigned char filename[],int udp_socket,struct sock
 		i++;
 		if(queryRequestMessage[i] == '.'){
 			cont--;
-			printf("Dentro del IF = %d\n",cont);
+			//printf("Dentro del IF = %d\n",cont);
 			message[poss+j] = cont;
-			printf("message[%d] = %.2X\n",poss+j,cont);
+			//printf("message[%d] = %.2X\n",poss+j,cont);
 			for(k = 0; k < cont; j++,k++){
 				message[poss+j+1] = queryRequestMessage[j];
-				printf("message[%d] = %c\n",poss+j+1,queryRequestMessage[j]);
+				//printf("message[%d] = %c\n",poss+j+1,queryRequestMessage[j]);
 			}
 			j++;
 			cont = 0;
-			printf("\n");
+			//printf("\n");
 			//printf("k = %d,i = %d\n",k,i);
 		}else if(i == strlen(queryRequestMessage)-1){
-			printf("Dentro del IF = %d\n",cont);
+			//printf("Dentro del IF = %d\n",cont);
 			message[poss+j] = cont;
-			printf("message[%d] = %.2X\n",poss+j,cont);
+			//printf("message[%d] = %.2X\n",poss+j,cont);
 			for(k = 0; k < cont; j++,k++){
 				message[poss+j+1] = queryRequestMessage[j];
-				printf("message[%d] = %c\n",poss+j+1,queryRequestMessage[j]);
+				//printf("message[%d] = %c\n",poss+j+1,queryRequestMessage[j]);
 			}
 			poss = poss+j+1;
 			j++;
 			cont = 0;
-			printf("\n");
+			//printf("\n");
 		}
-		printf("cont dentro %d\n",cont);
+		//printf("cont dentro %d\n",cont);
 	}
 	
   //Querties
-  printf("\nFin de message\n");
+  //printf("\nFin de message\n");
   message[poss] = 0x00;
-  printf("message[%d] = %.2X\n",poss,0x00);
+ //printf("message[%d] = %.2X\n",poss,0x00);
   poss++;
   //Type (Tipo)
   message[poss] = 0x00;
-  printf("message[%d] = %.2X\n",poss,0x00);
+ // printf("message[%d] = %.2X\n",poss,0x00);
   poss++;
   message[poss] = 0x01;
-  printf("message[%d] = %.2X\n",poss,0x01);
+  //printf("message[%d] = %.2X\n",poss,0x01);
   //Class (Clase)
   poss++;
   message[poss] = 0x00;
-  printf("message[%d] = %.2X\n",poss,0x00);
+  //printf("message[%d] = %.2X\n",poss,0x00);
   poss++;
   message[poss] = 0x01;
-  printf("message[%d] = %.2X\n",poss,0x01);
+  //printf("message[%d] = %.2X\n",poss,0x01);
   //Records adicionales 
 
   sendto(udp_socket,message,poss+1,MSG_DONTWAIT,(struct sockaddr *) &remota,sizeof(remota));
@@ -373,6 +373,10 @@ void Answer(){
 			lenght = (int)((message[startAns]&0x3F)<< 8) + (message[startAns+1]);
 			urlPrint(lenght+1,strlen(message+lenght)+1,message[lenght]);
 		}
+		else if(message[startAns] == 0){
+			printf("<root>\n");
+			startAns++;
+		}
 		startAns = startAns + 2;
 		printf("\tTipo (Type): ");
 		t = type((int)((message[startAns] << 8) +(message[startAns+1])));
@@ -406,13 +410,20 @@ void Answer(){
 		}
 		printf("\n\n");
 	}
-	printf("------Nombre de servidores de auridad (Authoritative nameservers)------\n");
+	printf("------Nombre de servidores de autoridad (Authoritative nameservers)------\n");
 	for(i = 0; i < autorityAns; i++){
 		//printf("%.2X %.2X %.2X \n",message[startAns],message[startAns+1],message[startAns+2] );
 		printf("\tNombre (Name): ");
 		if(message[startAns]>>6 == 3){
 			lenght = (int)((message[startAns]&0x3F)<< 8) + (message[startAns+1]);
 			urlPrint(lenght+1,strlen(message+lenght)+1,message[lenght]);
+		}
+		else if(message[startAns] == 0){
+			printf("<root>\n");
+			startAns++;
+		}
+		else{
+			startAns = startAns + 2;
 		}
 		startAns = startAns + 2;
 		printf("\tTipo (Type): ");
@@ -460,6 +471,13 @@ void Answer(){
 			lenght = (int)((message[startAns]&0x3F)<< 8) + (message[startAns+1]);
 			urlPrint(lenght+1,strlen(message+lenght)+1,message[lenght]);
 		}
+		else if(message[startAns] == 0){
+			printf("<root>\n");
+			startAns++;
+		}
+		else{
+			startAns = startAns + 2;
+		}
 		startAns = startAns + 2;
 		printf("\tTipo (Type): ");
 		t = type((int)((message[startAns] << 8) +(message[startAns+1])));
@@ -492,13 +510,16 @@ void Answer(){
 			}
 		}
 		else if(t == 28){
-			printf("\tAAAA Address = ");
+			printf("\tAAAA (Ipv6)Address = ");
 			startAns = startAns +2;
 			for(t = 0; t < 16;t++,startAns++){
 				if(t == 2 || t == 5 || t == 8 || t == 11 || t == 14 ){
 					printf(":");
+					printf("%.2X",message[startAns]);
 				}
-				printf("%.2X",message[startAns]);
+				else if(message[startAns] != 0x00){
+					printf("%.2X",message[startAns]);
+				}
 			}
 			printf("\n");	
 		}
@@ -508,7 +529,7 @@ void Answer(){
 			urlPrint(startAns+2+1,lenght,message[startAns+2]);
 			startAns = startAns + lenght-1;
 		}
-		printf("\n\n");
+		printf("\n");
 	}
 
 }
@@ -536,7 +557,9 @@ void urlPrint(int start,int length,int label){
 	int j = 0;
 	int i=start;
 	for(j = 0;j <= label & i < length+start;j++,i++){
+		//printf("  %.2X  ",message[i]);
 		if(message[i]>>6 == 3){
+			printf(".");
 			length = (int)((message[i]&0x3F)<< 8) + (message[i+1]);
 			urlPrint(length+1,strlen(message+length)+1,message[length]);
 			break;
