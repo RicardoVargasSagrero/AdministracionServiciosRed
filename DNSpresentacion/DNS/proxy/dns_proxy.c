@@ -31,6 +31,8 @@ void Query();
 void Answer();
 int type(int);
 void urlPrint(int,int,int);
+char * urlPrintString(int,int,int,char *);
+void QueryAnalizer();
 int main(){
     struct sockaddr_in local, remota, cliente;
     int udp_socket, lbind, tam, ptam,opcode,lrecv;
@@ -58,6 +60,7 @@ int main(){
             exit(1);
         }
         else{
+        	int id = 0x00; 
             perror("\nExito en bind");
             memset(&remota,0x00, sizeof(remota));
             remota.sin_family=AF_INET;
@@ -66,8 +69,11 @@ int main(){
             gettimeofday(&start, NULL);
             //while(mtime < 10000){
             //system("clear");
-            printf("************SERVIDOR DNS ARRIBAm********************\n");
+            printf("************SERVIDOR DNS ARRIBA********************\n");
             recvfrom(udp_socket,message,516,0,(struct sockaddr*)&remota,&lrecv);
+            id = (int) ((message[0] << 8) + message[1]);
+            printf("id de peticion = %d\n",id);
+            QueryAnalizer();
             printf("%s\n",message);
             gettimeofday(&end, NULL);
             seconds  = end.tv_sec  - start.tv_sec;
@@ -564,4 +570,34 @@ void urlPrint(int start,int length,int label){
 	}
 	label = (int) message[start];
 	printf("\n");
+}
+char * urlPrintString(int start,int length,int label,char *query){
+	int j = 0;
+	int i=start;
+	for(j = 0;j <= label & i < length+start;j++,i++){
+		//printf("  %.2X  ",message[i]);
+		if(message[i] == 0x00){
+			break;
+		}
+		else if(j == label){
+			label = message[i];
+			j = -1;
+			//printf(".");
+			query[i] = '.';
+		}
+		else{
+			query[i] = message[i];
+			//printf("%c",message[i]);
+		}
+	}
+	label = (int) message[start];
+	printf("\n");
+}
+void QueryAnalizer(){
+	//Se analizara la trama para separar el mensaje
+	int lenght = 0;
+	char queryRequestMessage [100];
+	lenght = strlen(message+12)+1;
+	*queryRequestMessage =  urlPrintString(12,lenght,message[lenght],queryRequestMessage);
+	printf("Query = %s\n",queryRequestMessage);
 }

@@ -36,8 +36,9 @@ int main(){
     int udp_socket, lbind, tam, ptam,opcode,lrecv;
     udp_socket = udp_socket = socket(AF_INET, SOCK_DGRAM, 0);
     unsigned char filename[100] = "prueba.c";
-    unsigned char ip[15] = "148.204.103.2";
-    //unsigned char ip[15] = "8.8.8.8";
+    //unsigned char ip[15] = "148.204.103.2";
+    unsigned char ip[15] = "8.8.8.8";
+    //unsigned char ip[15] = "10.0.2.15";
     int lenght;
     struct timeval start, end;
     long mtime=0, seconds, useconds;
