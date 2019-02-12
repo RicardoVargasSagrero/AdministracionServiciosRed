@@ -14,9 +14,8 @@ unsigned char mensaje[512] = "";
 
 int main(){
     struct sockaddr_in local, remota;
-    int udp_socket, lbind, tam,ptam;
+    int udp_socket, lbind, tam;
     udp_socket = socket(AF_INET, SOCK_DGRAM, 0); //MOmento de abrir el socket
-    unsigned char ip[15] = "192.168.0.4";//Dirección local
     int length = 0;
     if( udp_socket == -1 ){
         perror("\nError al abrir el socket");
@@ -26,7 +25,7 @@ int main(){
     else{ //Parte del BIND
         perror("\nExito al abrir el socket");
         memset(&local, 0x00, sizeof(local) ); //Resetear la memoria
-        local.sin_port = htons(0);
+        local.sin_port = htons(8000);
         local.sin_family = AF_INET;
         local.sin_addr.s_addr = INADDR_ANY;
         /*Condición para abrir el socket*/

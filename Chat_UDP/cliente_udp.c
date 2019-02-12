@@ -10,11 +10,12 @@
 //#include <sys/types.h>
 //#include <sys/socket.h>
 
-unsigned char mensaje[512] = "";
+unsigned char mensaje[512] = "adios";
+unsigned char respuesta[512] = "";
 
 int main(){
     struct sockaddr_in local, remota;
-    int udp_socket, lbind, tam,ptam;
+    int udp_socket, lbind, tam,ptam,lrecv;
     udp_socket = socket(AF_INET, SOCK_DGRAM, 0); //MOmento de abrir el socket
     unsigned char ip[15] = "192.168.0.4";//Dirección local
     int length = 0;
@@ -39,14 +40,21 @@ int main(){
 
         else{ //Parte del SENDTO
           perror("\nExito en el bind");
-          
+          memset(&remota,0x00, sizeof(remota));
+          remota.sin_family=AF_INET;
+          remota.sin_port=htons(8000);
+          remota.sin_addr.s_addr=inet_addr(ip);
+          tam = sendto(udp_socket, mensaje, 512, 0, (struct sockaddr *)&remota, sizeof(remota));
+          printf("Mensaje enviado\n");
           if( tam == -1 ){
             perror("\nError a enviar el mensaje");
             exit(1);
           }
 
           else{
-            perror("\nExito al enviar el mensaje: Genaro SA");
+            perror("\n------Esperando respuesta");
+            tam = recvfrom(udp_socket,respuesta,512,0,(struct sockaddr*)&remota,&ptam);
+            printf("-----Mensaje recibido: \n%s\n",respuesta);  
           }
 
         }

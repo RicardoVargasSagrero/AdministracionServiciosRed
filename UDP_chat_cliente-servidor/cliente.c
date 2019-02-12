@@ -66,6 +66,7 @@ int main(){
                     tam = sendto(udp_socket, mensaje, lenght+1, 0, (struct sockaddr *)&remota, sizeof(remota));
                     break;
                 case 3:
+                    break;
                     
               }
               printf("We send the FirstMessage");

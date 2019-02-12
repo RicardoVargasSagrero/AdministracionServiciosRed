@@ -28,7 +28,7 @@ int main(){
         perror("Exito al abrir el socket");
         memset(&servidor,0x00, sizeof(servidor));
         servidor.sin_family=AF_INET;
-        servidor.sin_port=htons(8000);
+        servidor.sin_port=htons(0);
         servidor.sin_addr.s_addr=INADDR_ANY;
         lbind = bind(udp_socket, (struct sockaddr *)&servidor, sizeof(servidor));
         if(lbind == -1){
