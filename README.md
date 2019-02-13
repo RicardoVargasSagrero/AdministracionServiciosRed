@@ -37,3 +37,7 @@ git push //Sube los cambios al repositorio
 //Cuando inicies de nuevo a programar 
 git status //checa el status del repositorio
 git pull //Baja los ultimos cambios del repositorio
+
+#-------------------------------------------------
+When having problems in ubuntu with opening WIRESHARK we can use the following command:
+$ xhost +si:localuser:root   
