@@ -1,0 +1,10 @@
+How to connect a MySQL DB with C 
+
+1.- Download MySQLServer and create a DB
+2.- To acces to the MySQL commandline service we need to run the following stament
+$ sudo mysql -u root 
+and then enter the password
+3.- Download the headers this the following command
+$ sudo apt-get install libmysqlclient-dev
+4.-Now we run the code conection.c using the next statement
+$ gcc -o output.o $(mysql_config --cflags)conection.c $(mysql_config --libs)
