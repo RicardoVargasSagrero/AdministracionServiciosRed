@@ -19,9 +19,15 @@ int main (){
       	perror ("\nError al recibir");
       	exit (1);
     }
+    /*After openning the socket() we are gonna add the REUSE clause*/
+	int enable = 1; 
+	if(setsockopt(udp_socket,SOL_SOCKET,SO_REUSEADDR,&enable,sizeof(int)) < 0)
+		perror("setsockopt(SO_REUSEADDR) failed");
+
+
   	else{
 
-	    printf ("\nExito al abrir el socket");
+	    printf ("\nExito al abrir el socket\n");
 	    memset (&servidor, 0x00, sizeof (servidor));
 	    servidor.sin_family = AF_INET;
 	    servidor.sin_port = htons (53);
@@ -29,13 +35,14 @@ int main (){
 	    lbind = bind (udp_socket, (struct sockaddr *) &servidor, sizeof (servidor));
       	if(lbind == -1){
 	  		perror ("\nError en el bind");
+	  		printf("\n");
 	  		exit (1);
 		}
       	else{
 	  		lrecv = sizeof (cliente);
 	  		gettimeofday (&start, NULL);
 	  		bandera = 0;
-	  		while (mtime < 20000){
+	  		while (mtime < 2000){
 	      		tam =recvfrom (udp_socket, paquete, 512, MSG_DONTWAIT,(struct sockaddr *) &cliente, &lrecv);
 	     		if (tam == -1){
 		  			//perror ("\nError al recibir");

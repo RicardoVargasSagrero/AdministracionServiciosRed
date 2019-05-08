@@ -49,10 +49,10 @@ int main(){
         exit(1);
     }
     else{
-        perror("Exito al abrir el socket");
+        perror("Exito al abrir el socket\n\n");
         memset(&local,0x00, sizeof(local));
         local.sin_family=AF_INET;
-        local.sin_port=htons(0);
+        local.sin_port=htons(53);//Port 53 to DNS
         local.sin_addr.s_addr=INADDR_ANY;
         lbind = bind(udp_socket, (struct sockaddr *)&local, sizeof(local));
         if(lbind == -1){
@@ -67,21 +67,23 @@ int main(){
             remota.sin_port=htons(53);
             remota.sin_addr.s_addr=INADDR_ANY;
             gettimeofday(&start, NULL);
-            //while(mtime < 10000){
+            while(mtime < 10000){
             //system("clear");
-            printf("************SERVIDOR DNS ARRIBA********************\n");
-            recvfrom(udp_socket,message,516,0,(struct sockaddr*)&remota,&lrecv);
-            id = (int) ((message[0] << 8) + message[1]);
-            printf("id de peticion = %d\n",id);
-            QueryAnalizer();
-            printf("%s\n",message);
-            gettimeofday(&end, NULL);
-            seconds  = end.tv_sec  - start.tv_sec;
-            useconds = end.tv_usec - start.tv_usec;
-            mtime = ((seconds) * 1000 + useconds/1000.0) + 0.5;	
-            //}
+            	printf("************SERVIDOR DNS ARRIBA********************\n");
+            	gettimeofday(&end, NULL);
+	            seconds  = end.tv_sec  - start.tv_sec;
+	            useconds = end.tv_usec - start.tv_usec;
+	            mtime = ((seconds) * 1000 + useconds/1000.0) + 0.5;
+	            printf("%ld\n",mtime );	
+	            //Enables nonblocking operation
+            	recvfrom(udp_socket,message,512,MSG_DONTWAIT,(struct sockaddr*)&remota,&lrecv);
+            	printf("hola\n");
+	            id = (int) ((message[0] << 8) + message[1]);
+	            printf("id de peticion = %d\n",id);
+	            QueryAnalizer();
+	            printf("%s\n",message);
+            }
             printf("Waiting for while\n");
-            
         }
     }
     close(udp_socket);
@@ -523,7 +525,6 @@ void Answer(){
 		}
 		printf("\n");
 	}
-
 }
 int type(int index){
 	switch(index){

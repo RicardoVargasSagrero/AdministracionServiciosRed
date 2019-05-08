@@ -41,3 +41,7 @@ git pull //Baja los ultimos cambios del repositorio
 #-------------------------------------------------
 When having problems in ubuntu with opening WIRESHARK we can use the following command:
 $ xhost +si:localuser:root   
+
+#-------------------------------------------------
+if we're having a problem opening a port  in linux we can reuse the port. In this forum I found the support to how to use REUSEADDR in a C program
+https://stackoverflow.com/questions/24194961/how-do-i-use-setsockoptso-reuseaddr

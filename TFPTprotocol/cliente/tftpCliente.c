@@ -39,7 +39,7 @@ int main(int argc, char const *argv[])
 {
 	int opcode;
 	char filename[100] = "tftpCliente.c";
-	char ip[15] = "10.100.78.101";
+	char ip[15] = "192.168.100.45";
  	struct sockaddr_in local, remota;    
 	int udp_socket,lbind,tam,lrecv;
 	unsigned char message[516];
