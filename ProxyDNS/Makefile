@@ -1,5 +1,5 @@
-dns.o: dns_request.c
-	gcc dns_request.c -o dns.o
+dns.o: proxy.c
+	gcc proxy.c -o dns.o
 
 clean:
 	rm *.o

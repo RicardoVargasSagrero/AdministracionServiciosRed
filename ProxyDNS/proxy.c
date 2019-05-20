@@ -6,13 +6,16 @@
 #include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
-
+void serchData();
+char *bin2hex(const unsigned char *input, size_t len);
 int main (){
 	struct sockaddr_in servidor, cliente;
 	int udp_socket, lrecv, tam, lbind, bandera;
-	unsigned char paquete[512];
+	unsigned char request[512];
 	struct timeval start, end;
 	long mtime = 0, seconds, useconds;
+	/*IP from google DNS*/
+	unsigned char ip_google[15] = "8.8.8.8";
   	udp_socket = socket (AF_INET, SOCK_DGRAM, 0);
   	if (udp_socket == -1){
 
@@ -42,13 +45,14 @@ int main (){
 	  		lrecv = sizeof (cliente);
 	  		gettimeofday (&start, NULL);
 	  		bandera = 0;
-	  		while (mtime < 2000){
-	      		tam =recvfrom (udp_socket, paquete, 512, MSG_DONTWAIT,(struct sockaddr *) &cliente, &lrecv);
+	  		while (mtime < 50000){
+	      		tam =recvfrom (udp_socket, request, 512, MSG_DONTWAIT,(struct sockaddr *) &cliente, &lrecv);
 	     		if (tam == -1){
-		  			//perror ("\nError al recibir");
+		  			perror ("\nError al recibir");
 				}
 	      		else{
-		  			printf ("%s", paquete);
+	      			printf("Exito al recibir query\n");
+		  			printf ("%s", request);
 		  			bandera = 1;
 				}
 	      		gettimeofday (&end, NULL);
@@ -63,4 +67,28 @@ int main (){
     }
   close (udp_socket);
   return 1;
+}
+
+void serchData(unsigned char request[]){
+
+}
+char *bin2hex(const unsigned char *input, size_t len){
+	char *result;
+	char *hexits = "0123456789ABCDEF";
+	int i;
+	if(input == NULL || len <= 0)
+		return NULL;
+
+	//(2 hexits+space)/chr + NULL
+	int resultlength = (len*3)+1;
+
+	result = malloc(resultlength);
+	bzero(result, resultlength);
+
+	for(i = 0; i < len; i++){
+		result[i*3] 	= hexits[input[i] >> 4];
+		result[(i*3)+1]	= hexits[input[i] & 0x0F];
+		result[(i*3)+2] = ' '; //for readability
+	}
+	return result;
 }
