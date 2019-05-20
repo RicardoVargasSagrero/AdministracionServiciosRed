@@ -5,7 +5,7 @@ COMMON_OBJS = common.o
 
 all: $(COMMON_OBJS) tcps
 
-#Common wrappers and definitios 
+#Common wrappers and definitions
 common.o: common.h common.c 
 	$(CC) $(CFLAGS) -c common.c
 
