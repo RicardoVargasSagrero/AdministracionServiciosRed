@@ -8,6 +8,7 @@
 #include <unistd.h>
 void serchData();
 char *bin2hex(const unsigned char *input, size_t len);
+void Query(unsigned char []);
 int main (){
 	struct sockaddr_in servidor, cliente;
 	int udp_socket, lrecv, tam, lbind, bandera;
@@ -48,10 +49,11 @@ int main (){
 	  		while (mtime < 50000){
 	      		tam =recvfrom (udp_socket, request, 512, MSG_DONTWAIT,(struct sockaddr *) &cliente, &lrecv);
 	     		if (tam == -1){
-		  			perror ("\nError al recibir");
+		  			//perror ("\nError al recibir");
 				}
 	      		else{
 	      			printf("Exito al recibir query\n");
+	      			Query(request);
 		  			printf ("%s", request);
 		  			bandera = 1;
 				}
@@ -91,4 +93,44 @@ char *bin2hex(const unsigned char *input, size_t len){
 		result[(i*3)+2] = ' '; //for readability
 	}
 	return result;
+}
+void Query(unsigned char message[]){
+	//Algoritmo para tranducir una petición DNS
+	//Esta apartir del message[12] y termina hasta el 
+	//strlen(message[12])
+	//Necesitamos sacar el tamaño de todo el mensaje para saber hasta donde
+	//se parara
+	/*This function will help us to create a string with the query that the client send,
+	thus we can ask to the data base if it exits*/
+	char *str = (char*)malloc(sizeof(char));
+
+	printf("------Consultas (Queries)------\n");
+	printf("\tNombre (name): ");
+	int i=13,lenght = strlen(message+12)+1,label,j,k = 1,l = 0;
+	label = (int) message[12];
+	for(j = 0;j <= label & i < lenght+12;j++,i++,k++,l++){
+		if(message[i] == 0x00){
+			break;
+		}
+		else if(j == label){
+			label = message[i];
+			str = (char*)realloc(str,k*sizeof(char));
+			str[l] = '.';
+			j = -1;
+			printf(".");
+		}
+		else{
+			str = (char*)realloc(str,k*sizeof(char));
+			str[l] = message[i];
+			printf("%c",message[i]);
+		}
+	}
+	printf("\n\tTipo (Type): ");
+	if(message[15+lenght] == 0x01){
+		printf("\tClase: IN (0x0001)------\n");
+	}else{
+		printf("\tClase no definida------\n");
+	}
+	printf("Str = %s\n",str);
+	free(str);
 }
