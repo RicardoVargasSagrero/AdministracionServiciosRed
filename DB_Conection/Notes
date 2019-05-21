@@ -11,3 +11,8 @@ and then enter the password
 $ sudo apt-get install libmysqlclient-dev
 4.-Now we run the code conection.c using the next statement
 $ gcc -o output.o $(mysql_config --cflags)conection.c $(mysql_config --libs)
+
+How to connect to MySQL from the command line 
+
+1.- $ sudo mysql -u root -p
+2.- $Enter password: 

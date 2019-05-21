@@ -1,14 +1,5 @@
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <netinet/ip.h>		/* superset of previous */
-#include <sys/time.h>
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
-#include <unistd.h>
-void serchData();
-char *bin2hex(const unsigned char *input, size_t len);
-void Query(unsigned char []);
+#include "common.h"
+
 int main (){
 	struct sockaddr_in servidor, cliente;
 	int udp_socket, lrecv, tam, lbind, bandera;
@@ -53,7 +44,7 @@ int main (){
 				}
 	      		else{
 	      			printf("Exito al recibir query\n");
-	      			Query(request);
+	      			QueryAnalyzer(request);
 		  			printf ("%s", request);
 		  			bandera = 1;
 				}
@@ -94,7 +85,7 @@ char *bin2hex(const unsigned char *input, size_t len){
 	}
 	return result;
 }
-void Query(unsigned char message[]){
+void QueryAnalyzer(unsigned char message[]){
 	//Algoritmo para tranducir una petición DNS
 	//Esta apartir del message[12] y termina hasta el 
 	//strlen(message[12])
@@ -132,5 +123,8 @@ void Query(unsigned char message[]){
 		printf("\tClase no definida------\n");
 	}
 	printf("Str = %s\n",str);
+
+	/*Connecting to the database*/
+	
 	free(str);
 }

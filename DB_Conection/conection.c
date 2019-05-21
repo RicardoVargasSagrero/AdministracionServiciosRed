@@ -4,7 +4,7 @@
 
 static char *host = "localhost";
 static char *user = "root";
-static char *pw = "Speck3220$";
+static char *pw = "Speck3220#";
 static char *proxyDB = "proxy";
 unsigned int port = 3306;
 static char *unix_socket = NULL;
@@ -16,7 +16,9 @@ int main(int argc, char const *argv[])
 	MYSQL_RES *res;  /*Result set variable*/
 	MYSQL_ROW row; /*This variable will content all the sets of every register*/
 	conn = mysql_init(NULL); 
-
+	char statment[20] = "www.steren.com.mx"
+	char query[20] = "select url from pages where url = '"
+	
 	if(!(mysql_real_connect(conn,host,user,pw,proxyDB,port,unix_socket,flag))){
 		fprintf(stderr,"\nError: %s [%d]\n",mysql_error(conn),mysql_errno(conn));
 	}else{
