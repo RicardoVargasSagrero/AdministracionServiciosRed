@@ -9,13 +9,16 @@
 #include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include "mysql/mysql.h"
+#include <stdbool.h>
+
 void serchData();
 char *bin2hex(const unsigned char *input, size_t len);
-void QueryAnalyzer(unsigned char []);
+bool QueryAnalyzer(unsigned char []);
 
 static char *host = "localhost";
 static char *user = "root";
-static char *pw = "Speck3220$";
+static char *pw = "Speck3220#";
 static char *proxyDB = "proxy";
 unsigned int port = 3306;
 static char *unix_socket = NULL;

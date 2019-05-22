@@ -1,5 +1,5 @@
 dns.o: proxy.c
-	gcc proxy.c -o dns.o
+	gcc -o dns.o $(mysql_config --cflags)proxy.c $(mysql_config --libs)
 
 clean:
 	rm *.o

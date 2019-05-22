@@ -44,7 +44,12 @@ int main (){
 				}
 	      		else{
 	      			printf("Exito al recibir query\n");
-	      			QueryAnalyzer(request);
+	      			if(QueryAnalyzer(request)){
+	      				printf("ACCEPTADO\n");
+	      			}else{
+	      				printf("DENEGADO");
+	      			}
+	      			
 		  			printf ("%s", request);
 		  			bandera = 1;
 				}
@@ -85,7 +90,7 @@ char *bin2hex(const unsigned char *input, size_t len){
 	}
 	return result;
 }
-void QueryAnalyzer(unsigned char message[]){
+bool QueryAnalyzer(unsigned char message[]){
 	//Algoritmo para tranducir una petición DNS
 	//Esta apartir del message[12] y termina hasta el 
 	//strlen(message[12])
@@ -125,6 +130,36 @@ void QueryAnalyzer(unsigned char message[]){
 	printf("Str = %s\n",str);
 
 	/*Connecting to the database*/
-	
+	MYSQL *conn;
+	MYSQL_RES *res;
+	MYSQL_ROW row;
+	conn = mysql_init(NULL);
+	char query[37] = "select url from pages where url = '";
+	char finish [3] = "';";
+	char concat[70];
+	memset(concat,0,sizeof(concat));
+	strcat(concat,query);
+	strcat(concat,str);
+	strcat(concat,finish);
+	printf("QUERY = %s\n",concat);
+	if(!(mysql_real_connect(conn,host,user,pw,proxyDB,port,unix_socket,flag))){
+		fprintf(stderr,"\nError: %s [%d]\n",mysql_error(conn),mysql_errno(conn));
+		return 0;
+	}else{
+		perror("Connection successfull\n");
+		if(mysql_query(conn,concat)){
+			fprintf(stderr, "%s\n",mysql_error(conn));
+			exit(1);
+		}
+		res = mysql_use_result(conn);
+		if((row = mysql_fetch_row(res)) == NULL){
+			printf("Permitir acceso a DNS de google para respuesta\n");
+			return 1;
+		}
+		else{
+			printf("DENEGAR ACCESO y mandar servicio HTTP\n");
+			return 0;
+		}
+	}
 	free(str);
 }
