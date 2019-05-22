@@ -11,6 +11,7 @@
 #include <unistd.h>
 #include "mysql/mysql.h"
 #include <stdbool.h>
+#include <arpa/inet.h>
 
 void serchData();
 char *bin2hex(const unsigned char *input, size_t len);

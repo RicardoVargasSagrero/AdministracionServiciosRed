@@ -1,9 +1,9 @@
 #include "common.h"
 
 int main (){
-	struct sockaddr_in servidor, cliente;
+	struct sockaddr_in servidor, cliente,servidor_google;
 	int udp_socket, lrecv, tam, lbind, bandera;
-	unsigned char request[512];
+	unsigned char request[512],google_answer[516];
 	struct timeval start, end;
 	long mtime = 0, seconds, useconds;
 	/*IP from google DNS*/
@@ -46,6 +46,14 @@ int main (){
 	      			printf("Exito al recibir query\n");
 	      			if(QueryAnalyzer(request)){
 	      				printf("ACCEPTADO\n");
+	      				memset(&servidor_google,0x00,sizeof(servidor_google));
+	      				servidor_google.sin_family = AF_INET;
+	      				servidor_google.sin_port = htons(53);
+	      				servidor_google.sin_addr.s_addr = inet_addr(ip_google);
+	      				sendto(udp_socket,request,512,MSG_DONTWAIT,(struct sockaddr *) &servidor_google,sizeof(servidor_google));
+	      				recvfrom(udp_socket,google_answer,516,0,(struct sockaddr*)&servidor_google,&lrecv);
+	      				sendto(udp_socket,google_answer,516,MSG_DONTWAIT,(struct sockaddr*)&cliente, sizeof(cliente));
+
 	      			}else{
 	      				printf("DENEGADO");
 	      			}

@@ -1,0 +1,8 @@
+how to change DNS server in linux 
+
+we open a terminal and type 
+
+$ sudo sublime /etc/resolv.conf
+$ password: 
+
+In the name server we change it to the on we're gonna use
