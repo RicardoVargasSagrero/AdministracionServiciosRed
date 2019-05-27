@@ -3,7 +3,7 @@
 int main (){
 	struct sockaddr_in servidor, cliente,servidor_google;
 	int udp_socket, lrecv, tam, lbind, bandera;
-	unsigned char request[512],google_answer[516];
+	unsigned char request[512];
 	struct timeval start, end;
 	long mtime = 0, seconds, useconds;
 	/*IP from google DNS*/
@@ -37,7 +37,7 @@ int main (){
 	  		lrecv = sizeof (cliente);
 	  		gettimeofday (&start, NULL);
 	  		bandera = 0;
-	  		while (mtime < 50000){
+	  		for( ; ; ){
 	      		tam =recvfrom (udp_socket, request, 512, MSG_DONTWAIT,(struct sockaddr *) &cliente, &lrecv);
 	     		if (tam == -1){
 		  			//perror ("\nError al recibir");
@@ -53,21 +53,17 @@ int main (){
 	      				sendto(udp_socket,request,512,MSG_DONTWAIT,(struct sockaddr *) &servidor_google,sizeof(servidor_google));
 	      				recvfrom(udp_socket,google_answer,516,0,(struct sockaddr*)&servidor_google,&lrecv);
 	      				sendto(udp_socket,google_answer,516,MSG_DONTWAIT,(struct sockaddr*)&cliente, sizeof(cliente));
-
 	      			}else{
 	      				printf("DENEGADO");
+	      				printf("%d\n",cliente.sin_addr.s_addr );
+	      				accessDenied(request);
 	      			}
-	      			
-		  			printf ("%s", request);
-		  			bandera = 1;
 				}
 	      		gettimeofday (&end, NULL);
 	      		seconds = end.tv_sec - start.tv_sec;
 	     		useconds = end.tv_usec - start.tv_usec;
 	    		mtime = ((seconds) * 1000 + useconds / 1000.0) + 0.5;
 	      		//printf ("Elapsed time: %ld milliseconds\n", mtime);
-	      		if(bandera == 1)
-					break;
 	    	}
 		}
     }
@@ -144,7 +140,7 @@ bool QueryAnalyzer(unsigned char message[]){
 	conn = mysql_init(NULL);
 	char query[37] = "select url from pages where url = '";
 	char finish [3] = "';";
-	char concat[70];
+	char concat[200];
 	memset(concat,0,sizeof(concat));
 	strcat(concat,query);
 	strcat(concat,str);
@@ -170,4 +166,64 @@ bool QueryAnalyzer(unsigned char message[]){
 		}
 	}
 	free(str);
+}
+void accessDenied(unsigned char response[]){
+	int i;
+	memset(google_answer,0x00,sizeof(google_answer));
+	for(i = 0; i < 2; i++){
+		google_answer[i] = response[i];
+	}
+	google_answer[2] = 0x81;/*Flags*/
+	google_answer[3] = 0x80;/*Flags*/
+	google_answer[4] = 0x00;/*Flagas*/
+	google_answer[5] = 0x01;/*Questions*/
+	google_answer[6] = 0x01;/*Answer RRs*/
+	google_answer[7] = 0x00;/*Authority*/
+	google_answer[8] = 0x00;/*Additional RRs*/
+	for(i = 9; i < 28; i++){/*Queries*/
+		google_answer[i] = response[i];
+	}
+	/* http://localhost:18000/ */
+	google_answer[28] = 0x68;/*h*/ 
+	google_answer[29] = 0x74;/*t*/
+	google_answer[30] = 0x74;/*t*/
+	google_answer[31] = 0x70;/*p*/
+	google_answer[32] = 0x6c;/*:*/
+	google_answer[33] = 0x2f;/*/*/
+	google_answer[34] = 0x2f;/*/*/ 
+	google_answer[35] = 0x6c;/*l*/
+	google_answer[36] = 0x6f;/*o*/
+	google_answer[37] = 0x63;/*c*/
+	google_answer[38] = 0x61;/*a*/
+	google_answer[39] = 0x6c;/*l*/
+	google_answer[40] = 0x68;/*h*/ 
+	google_answer[41] = 0x6f;/*o*/
+	google_answer[42] = 0x73;/*s*/
+	google_answer[43] = 0x74;/*t*/
+	google_answer[44] = 0x6c;/*:*/
+	google_answer[45] = 0x01;/*1*/
+	google_answer[46] = 0x08;/*8*/ 
+	google_answer[47] = 0x00;/*0*/
+	google_answer[48] = 0x00;/*0*/
+	google_answer[49] = 0x00;/*0*/
+	google_answer[50] = 0x00;
+	google_answer[51] = 0x01;
+	google_answer[52] = 0x00;
+	google_answer[53] = 0x01;
+	google_answer[54] = 0x00;/*Type*/
+	google_answer[55] = 0x01;/*Type*/ 
+	google_answer[56] = 0x00;/*Class*/
+	google_answer[57] = 0x01;/*Class*/
+	google_answer[58] = 0x00;/*Time to live*/
+	google_answer[59] = 0x00;/*Time to live*/
+	google_answer[60] = 0x0e;/*Time to live*/
+	google_answer[61] = 0x0f;/*Time to live*/
+	google_answer[62] = 0x00;/*Data lenght*/
+	google_answer[63] = 0x04;/*Data lenght*/
+
+	google_answer[64] = 0x00;/*Address*/
+	google_answer[65] = 0x00;/*Address*/
+	google_answer[66] = 0x00;/*Address*/
+	google_answer[67] = 0x00;/*Address*/
+
 }

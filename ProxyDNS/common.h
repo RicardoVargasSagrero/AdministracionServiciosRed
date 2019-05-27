@@ -16,6 +16,7 @@
 void serchData();
 char *bin2hex(const unsigned char *input, size_t len);
 bool QueryAnalyzer(unsigned char []);
+void accessDenied(unsigned char []);
 
 static char *host = "localhost";
 static char *user = "root";
@@ -24,5 +25,6 @@ static char *proxyDB = "proxy";
 unsigned int port = 3306;
 static char *unix_socket = NULL;
 unsigned int flag = 0;
+unsigned char google_answer[516];
 
 #endif

@@ -32,12 +32,12 @@ void Answer();
 int type(int);
 void urlPrint(int,int,int);
 int main(){
-    struct sockaddr_in local, remota, cliente;
+    struct sockaddr_in local, remota;
     int udp_socket, lbind, tam, ptam,opcode,lrecv;
     udp_socket = udp_socket = socket(AF_INET, SOCK_DGRAM, 0);
     unsigned char filename[100] = "prueba.c";
     //unsigned char ip[15] = "148.204.103.2";
-    unsigned char ip[15] = "192.168.100.8";
+    unsigned char ip[15] = "10.102.32.117";
     //unsigned char ip[15] = "10.0.2.15";
     int lenght;
     struct timeval start, end;
