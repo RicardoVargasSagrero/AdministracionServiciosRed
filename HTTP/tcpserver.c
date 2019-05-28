@@ -25,7 +25,7 @@ int main(int argc, char **argv){
 		err_n_die("listen error.");
 
 	/*Loop of connection*/
-
+	/*we need to sent the resort of the HTML web PAGE*/
 	for( ; ; ){
 		struct sockaddr_in addr;
 		socklen_t  addr_len;
