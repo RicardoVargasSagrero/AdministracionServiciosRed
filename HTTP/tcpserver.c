@@ -1,6 +1,10 @@
 #include "common.h"
 
+char httpHeader[8000] = "HTTP/1.0 200 OK\r\n""Content-Type: text/html; charset=UTF-8\r\n\r\n";
 int main(int argc, char **argv){
+	//FILE *htlmData = fopen("/home/ricardo/Documents/8vo/AdministracionServiciosRed/HTTP/page.html","r");
+	
+
 	//variables to recieve data
 	int 				listenfd, connfd,n;
 	struct sockaddr_in 	servaddr;
@@ -18,6 +22,10 @@ int main(int argc, char **argv){
 	servaddr.sin_port 			= htons(SERVER_PORT);
 
 	/*this part binds or listening socket to the address*/
+	int enable = 1;
+	if(setsockopt(listenfd,SOL_SOCKET,SO_REUSEADDR,&enable,sizeof(int)) < 0)
+		perror("setsockopt(SO_REUSEADDR) failed");
+
 	if((bind(listenfd, (SA *)&servaddr,sizeof(servaddr))) < 0)
 		err_n_die("bind error.");
 
@@ -26,6 +34,7 @@ int main(int argc, char **argv){
 
 	/*Loop of connection*/
 	/*we need to sent the resort of the HTML web PAGE*/
+	setHttpHeader(httpHeader); 
 	for( ; ; ){
 		struct sockaddr_in addr;
 		socklen_t  addr_len;
@@ -54,11 +63,27 @@ int main(int argc, char **argv){
 			err_n_die("read error");
 
 		//now send a response
+		/*Direccion de recurso*/
+		//home/ricardo/Documents/8vo/AdministracionServiciosRed/HTTP
 		snprintf((char*)buff,sizeof(buff),"HTTP/1.0 200 OK\r\n\r\n Hello");
 		//note: normally, you may want to check the result from write and close 
 		//in case errror occur, For now, I'm ingring them. 
-		write(connfd, (char*)buff,strlen((char*)buff));
+		write(connfd, (char*)httpHeader,strlen((char*)httpHeader));
+		//send(connfd,httpHeader,sizeof(httpHeader),0);
 		close(connfd); 
 	}
 
+}
+void setHttpHeader(char httpHeader[])
+{
+    // File object to return
+    FILE *htmlData = fopen("/home/ricardo/Documents/8vo/AdministracionServiciosRed/HTTP/page.html", "r");
+
+    char line[100];
+    char responseData[8000];
+    while (fgets(line, 100, htmlData) != 0) {
+        strcat(responseData, line);
+    }
+    // char httpHeader[8000] = "HTTP/1.1 200 OK\r\n\n";
+    strcat(httpHeader, responseData);
 }

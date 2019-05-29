@@ -25,5 +25,6 @@
 
 void err_n_die(const char *fmt, ...);
 char *bin2hex(const unsigned char *input, size_t len);
+void setHttpHeader(char httpHeader[]);
 
 #endif

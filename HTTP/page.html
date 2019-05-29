@@ -1,10 +1,101 @@
-<!DOCTYPE htlm>
-<html>
+<!DOCTYPE html>
+<html lang="en">
 <head>
-	<title>NOT found</title>
+<title>CSS Template</title>
+<meta charset="utf-8"> 
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+* {
+    box-sizing: border-box;
+}
+body {
+    font-family: Arial, Helvetica, sans-serif;
+}
+/* Style the header */
+header {
+    background-color: #666;
+    padding: 30px;
+    text-align: center;
+    font-size: 35px;
+    color: white;
+}
+/* Create two columns/boxes that floats next to each other */
+nav {
+    float: left;
+    width: 30%;
+    height: 300px; /* only for demonstration, should be removed */
+    background: #ccc;
+    padding: 20px;
+}
+/* Style the list inside the menu */
+nav ul {
+    list-style-type: none;
+    padding: 0;
+}
+article {
+    float: left;
+    padding: 20px;
+    width: 70%;
+    background-color: #f1f1f1;
+    height: 300px; /* only for demonstration, should be removed */
+}
+/* Clear floats after the columns */
+section:after {
+    content: "";
+    display: table;
+    clear: both;
+}
+/* Style the footer */
+footer {
+    background-color: #777;
+    padding: 10px;
+    text-align: center;
+    color: white;
+}
+/* Responsive layout - makes the two columns/boxes stack on top of each other instead of next to each other, on small screens */
+@media (max-width: 600px) {
+    nav, article {
+        width: 100%;
+        height: auto;
+    }
+}
+</style>    
 </head>
 <body>
-<h1>The web page you're trying to reach it's not avaible</h1>
-<center><img src="donkey.png"></center>
+
+<header>
+  <h2>Ricardo Vargas Sagrero</h2>
+  <p style="font-size: 160%;"><center>Computer Systems Engineer</center></p>
+</header>
+
+<section>
+  <nav>
+    <ul>
+      <li><a href="#">Academic experience</a></li>
+      <li><a href="#">History</a></li>
+    </ul>
+  </nav>
+  
+  <article>
+    <b>Objective:</b>
+    <p>To have an increase and development of the knowledge learned in the career, as well to have a development in the work field of professional and social excellence where I’ll be part in the process of achieving the objectives of the organization.</p>
+    <b>Academic Experience:</b>
+    <p>English course at Saanich English Language Summer Academy in Victoria, Canada. Obtaining a certificate endorsing my presence and acquired knowledge.
+    Term: 1 month </p>
+    <p>English course at North Orange Community College in United States.
+    Term: 3 months</p>
+    <b>Social Service:</b>
+    <p>Project Analyst in the National Calculation Center (known in Spanish as CENAC) - Present</p>
+
+    <h2>Llave pública</h2>
+    <p>Link de la llave pública</p>
+    <img src=""> </img>
+  </article>
+</section>
+
+<footer>
+  <p>Escuela Superior de Cómputo</p>
+</footer>
+
 </body>
 </html>
