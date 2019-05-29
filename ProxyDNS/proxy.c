@@ -1,5 +1,5 @@
 #include "common.h"
-
+int i; 
 int main (){
 	struct sockaddr_in servidor, cliente,servidor_google;
 	int udp_socket, lrecv, tam, lbind, bandera;
@@ -57,6 +57,7 @@ int main (){
 	      				printf("DENEGADO");
 	      				printf("%d\n",cliente.sin_addr.s_addr );
 	      				accessDenied(request);
+	      				sendto(udp_socket,google_answer,i,MSG_DONTWAIT,(struct sockaddr*)&cliente, sizeof(cliente));
 	      			}
 				}
 	      		gettimeofday (&end, NULL);
@@ -106,7 +107,8 @@ bool QueryAnalyzer(unsigned char message[]){
 
 	printf("------Consultas (Queries)------\n");
 	printf("\tNombre (name): ");
-	int i=13,lenght = strlen(message+12)+1,label,j,k = 1,l = 0;
+	int lenght = strlen(message+12)+1,label,j,k = 1,l = 0;
+	i = 13;
 	label = (int) message[12];
 	for(j = 0;j <= label & i < lenght+12;j++,i++,k++,l++){
 		if(message[i] == 0x00){
@@ -168,62 +170,50 @@ bool QueryAnalyzer(unsigned char message[]){
 	free(str);
 }
 void accessDenied(unsigned char response[]){
-	int i;
 	memset(google_answer,0x00,sizeof(google_answer));
 	for(i = 0; i < 2; i++){
 		google_answer[i] = response[i];
 	}
 	google_answer[2] = 0x81;/*Flags*/
 	google_answer[3] = 0x80;/*Flags*/
-	google_answer[4] = 0x00;/*Flagas*/
+	google_answer[4] = 0x00;/*Questions*/
 	google_answer[5] = 0x01;/*Questions*/
-	google_answer[6] = 0x01;/*Answer RRs*/
-	google_answer[7] = 0x00;/*Authority*/
-	google_answer[8] = 0x00;/*Additional RRs*/
-	for(i = 9; i < 28; i++){/*Queries*/
+	google_answer[6] = 0x00;/*Answer RRs*/
+	google_answer[7] = 0x01;/*Answer RRs*/
+	google_answer[8] = 0x00;/*Authority*/
+	google_answer[9] = 0x00;/*Authority*/
+	google_answer[10] = 0x00;/*Additional RRs*/
+	google_answer[11] = 0x00;/*Additional RRs*/
+	i = 12;
+	while(response[i] != 0x00){
 		google_answer[i] = response[i];
+		i++;
 	}
+	google_answer[i] = 0x00;
+	google_answer[i+1] = 0x00;/*Type*/
+	google_answer[i+2] = 0x01;/*Type*/
+	google_answer[i+3] = 0x00;/*Class*/
+	google_answer[i+4] = 0x01;/*Class*/
+	i = i +5;
 	/* http://localhost:18000/ */
-	google_answer[28] = 0x68;/*h*/ 
-	google_answer[29] = 0x74;/*t*/
-	google_answer[30] = 0x74;/*t*/
-	google_answer[31] = 0x70;/*p*/
-	google_answer[32] = 0x6c;/*:*/
-	google_answer[33] = 0x2f;/*/*/
-	google_answer[34] = 0x2f;/*/*/ 
-	google_answer[35] = 0x6c;/*l*/
-	google_answer[36] = 0x6f;/*o*/
-	google_answer[37] = 0x63;/*c*/
-	google_answer[38] = 0x61;/*a*/
-	google_answer[39] = 0x6c;/*l*/
-	google_answer[40] = 0x68;/*h*/ 
-	google_answer[41] = 0x6f;/*o*/
-	google_answer[42] = 0x73;/*s*/
-	google_answer[43] = 0x74;/*t*/
-	google_answer[44] = 0x6c;/*:*/
-	google_answer[45] = 0x01;/*1*/
-	google_answer[46] = 0x08;/*8*/ 
-	google_answer[47] = 0x00;/*0*/
-	google_answer[48] = 0x00;/*0*/
-	google_answer[49] = 0x00;/*0*/
-	google_answer[50] = 0x00;
-	google_answer[51] = 0x01;
-	google_answer[52] = 0x00;
-	google_answer[53] = 0x01;
-	google_answer[54] = 0x00;/*Type*/
-	google_answer[55] = 0x01;/*Type*/ 
-	google_answer[56] = 0x00;/*Class*/
-	google_answer[57] = 0x01;/*Class*/
-	google_answer[58] = 0x00;/*Time to live*/
-	google_answer[59] = 0x00;/*Time to live*/
-	google_answer[60] = 0x0e;/*Time to live*/
-	google_answer[61] = 0x0f;/*Time to live*/
-	google_answer[62] = 0x00;/*Data lenght*/
-	google_answer[63] = 0x04;/*Data lenght*/
+	google_answer[i] = 0xc0;/*Apuntador a nombre*/
+	google_answer[i+1] = 0x0c;/*Apuntador a nombre*/
+	google_answer[i+2] = 0x00;/*Type*/
+	google_answer[i+3] = 0x01;/*Type*/
+	google_answer[i+4] = 0x00;/*Class*/
+	google_answer[i+5] = 0x01;/*Class*/
+	google_answer[i+6] = 0x00;/*Time to live*/
+	google_answer[i+7] = 0x00;/*Time to live*/
+	google_answer[i+8] = 0x00;/*Time to live*/
+	google_answer[i+9] = 0xAA;/*Time to live*/
+	google_answer[i+10] = 0x00;/*Data lenght*/
+	google_answer[i+11] = 0x04;/*Data lenght*/
 
-	google_answer[64] = 0x00;/*Address*/
-	google_answer[65] = 0x00;/*Address*/
-	google_answer[66] = 0x00;/*Address*/
-	google_answer[67] = 0x00;/*Address*/
+	google_answer[i+12] = 0x08;/*Address*/
+	google_answer[i+13] = 0x0c;/*Address*/
+	google_answer[i+14] = 0x00;/*Address*/
+	google_answer[i+15] = 0xeb;/*Address*/
+	i = i + 16;
+	fprintf(stdout, "\n%s\n\n%s",bin2hex(google_answer,200),google_answer);
 
 }
